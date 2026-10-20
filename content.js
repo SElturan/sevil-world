@@ -5,6 +5,8 @@ const CONTENT = {
   worldTitle: "Мой большой мир",
   hint: "Нажми на школу, юрту или флаг",
   finale: "Спасибо, что заглянул в мой мир!",
+  // настоящие песни для историй; для «мира» играет встроенная мелодия
+  songs: { school: "music/school.mp3", family: "music/family.m4a", land: "music/land.m4a" },
   music: {
     world: { root: 62, wave: "triangle", bpm: 100, bass: [0, 7, 5, 7], drum: false,
       melody: [0,4,7,9, 7,4,7,null, 5,9,12,9, 7,null,4,null, 0,4,7,12, 11,9,7,null, 5,7,9,7, 4,2,0,null] },

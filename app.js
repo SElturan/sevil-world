@@ -45,11 +45,15 @@ async function renderLoop(c) {
 const audio = new Audio();
 audio.loop = true; audio.setAttribute("playsinline", "");
 const urls = {};
-const getUrl = (k) => (urls[k] = urls[k] || renderLoop(C.music[k]));
+const getUrl = (k) => (urls[k] = urls[k] || (C.songs && C.songs[k] ? Promise.resolve(C.songs[k]) : renderLoop(C.music[k])));
 let curTrack = null;
 const fade = (to, ms) => new Promise((res) => {
-  const from = audio.volume, t0 = performance.now();
-  (function f(t) { const k = Math.min(1, (t - t0) / ms); audio.volume = Math.max(0, Math.min(1, from + (to - from) * k)); k < 1 ? requestAnimationFrame(f) : res(); })(t0);
+  const from = audio.volume, t0 = Date.now();
+  const id = setInterval(() => {
+    const k = Math.min(1, (Date.now() - t0) / ms);
+    audio.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+    if (k >= 1) { clearInterval(id); res(); }
+  }, 30);
 });
 async function track(key) {
   if (curTrack === key) return;
