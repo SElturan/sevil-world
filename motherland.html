@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Моя Родина</title>
+<link rel="stylesheet" href="common.css">
+<style>:root { --sky1: #4a6fd1; --sky2: #ffd6a5; }
+.eagle { animation: fly 14s linear infinite; }
+@keyframes fly { from { transform: translate(-80px,230px); } 50% { transform: translate(200px,170px); } to { transform: translate(500px,230px); } }
+.wing { transform-box: fill-box; transform-origin: center; animation: flap .6s ease-in-out infinite; }
+@keyframes flap { 50% { transform: scaleY(-.5); } }
+.flag { transform-box: fill-box; transform-origin: left center; animation: flagw 1.4s ease-in-out infinite; }
+@keyframes flagw { 50% { transform: skewY(5deg) scaleX(.95); } }
+.rise { animation: rise 3s ease-out both; }
+@keyframes rise { from { transform: translateY(80px); opacity: 0; } to { transform: none; opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="start"><h1>Родина Севиль 🇰🇬</h1><button>▶ Начать</button></div>
+<button class="mute">🔊</button>
+<div class="scene">
+<div class="title">Моя Родина<span class="sub">Кыргызстан</span></div>
+<svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice">
+  <g transform="translate(120,250)"><g class="spin"><g class="rays"></g></g><circle r="42" fill="#ffd23f" opacity=".9"/></g>
+  <g fill="#fff" opacity=".9" class="drift"><ellipse cx="60" cy="150" rx="50" ry="16"/><ellipse cx="90" cy="140" rx="30" ry="14"/></g>
+  <g class="eagle"><g class="wing"><path d="M0 0Q-30 -25 -55 -5Q-30 -8 0 8Q30 -8 55 -5Q30 -25 0 0Z" fill="#3b2314"/></g></g>
+  <!-- горы Тянь-Шаня -->
+  <path d="M-20 520L90 290L150 380L230 230L330 400L420 330V700H-20Z" fill="#5b6fa8"/>
+  <path d="M230 230L205 275L225 265L240 285L255 262L270 275Z" fill="#fff"/>
+  <path d="M90 290L68 330L88 322L100 338L118 320Z" fill="#fff"/>
+  <path class="rise" d="M-20 600L60 420L140 520L220 380L320 520L420 440V700H-20Z" fill="#3d5a99"/>
+  <path d="M220 380L196 420L216 412L228 428L246 408Z" fill="#fff"/>
+  <path d="M-20 650Q100 560 200 620T420 600V700H-20Z" fill="#4f9d4f"/>
+  <!-- юрта и цветы -->
+  <g transform="translate(300,610) scale(.45)"><rect x="-60" y="0" width="120" height="60" fill="#fff8e7" stroke="#8d5524" stroke-width="4"/>
+    <path d="M-70 0Q0 -80 70 0Z" fill="#fff" stroke="#8d5524" stroke-width="4"/><path d="M-15 60V25Q0 15 15 25V60Z" fill="#a0522d"/></g>
+  <g class="sway"><path d="M60 650V620" stroke="#2b8a3e" stroke-width="3"/><circle cx="60" cy="616" r="8" fill="#e03131"/></g>
+  <g class="sway" style="animation-delay:.5s"><path d="M110 665V632" stroke="#2b8a3e" stroke-width="3"/><circle cx="110" cy="628" r="8" fill="#f59f00"/></g>
+  <g class="sway" style="animation-delay:1s"><path d="M200 660V630" stroke="#2b8a3e" stroke-width="3"/><circle cx="200" cy="626" r="8" fill="#e03131"/></g>
+  <!-- флаг -->
+  <g transform="translate(75,430)">
+    <line x1="0" y1="0" x2="0" y2="210" stroke="#5a2d00" stroke-width="5"/>
+    <g class="flag"><rect x="0" y="0" width="160" height="106" fill="#e8112d"/>
+      <g transform="translate(80,53) scale(.62)"><g class="rays" style="opacity:1"></g><circle r="38" fill="#ffd23f"/>
+        <g stroke="#e8112d" stroke-width="3" fill="none"><circle r="24"/><path d="M-24 0H24M0 -24V24M-17 -17L17 17M17 -17L-17 17" stroke-width="2"/></g></g></g>
+  </g>
+</svg>
+</div>
+<div class="caption"></div>
+<script src="common.js"></script>
+<script>
+begin({
+  lines: ["Кыргызстан — моя Родина 🇰🇬", "Высокие горы Тянь-Шаня ⛰️", "Свободная и красивая страна", "Я люблю свою Родину ❤️"],
+  music: { root: 50, wave: "sawtooth", bpm: 92, drum: true, bass: [0, 0, 7, 5],
+    melody: [0,null,3,5, 7,null,5,3, 0,null,3,0, -2,null,0,null, 5,7,10,null, 12,10,7,5, 7,5,3,null, 0,null,null,null] }
+});
+</script>
+</body>
+</html>

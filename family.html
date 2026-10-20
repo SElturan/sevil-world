@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Моя семья</title>
+<link rel="stylesheet" href="common.css">
+<style>:root { --sky1: #ffb36b; --sky2: #ffe7a8; }
+.smoke circle { fill: #fff; opacity: 0; animation: smoke 4s linear infinite; }
+@keyframes smoke { 0% { opacity: .8; transform: translate(0,0) scale(.5); } 100% { opacity: 0; transform: translate(30px,-90px) scale(2); } }
+.heart { fill: #ff4d6d; opacity: 0; animation: up 5s ease-in infinite; }
+@keyframes up { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-200px); } }
+.hop { animation: hop 1.2s ease-in-out infinite; }
+@keyframes hop { 50% { transform: translateY(-12px); } }
+</style>
+</head>
+<body>
+<div class="start"><h1>Семья Севиль 🏠</h1><button>▶ Начать</button></div>
+<button class="mute">🔊</button>
+<div class="scene">
+<div class="title">Моя семья<span class="sub">Севиль</span></div>
+<svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice">
+  <g transform="translate(320,120)"><g class="spin"><g class="rays"></g></g><circle r="40" fill="#ffd23f"/>
+    <g stroke="#d9480f" stroke-width="3" fill="none"><circle r="24"/><path d="M-24 0H24M0 -24V24"/></g></g>
+  <ellipse cx="200" cy="640" rx="360" ry="140" fill="#7bc47f"/>
+  <ellipse cx="60" cy="560" rx="200" ry="70" fill="#8fd18f"/>
+  <!-- юрта -->
+  <g transform="translate(200,380)">
+    <rect x="-110" y="0" width="220" height="110" fill="#fff8e7" stroke="#8d5524" stroke-width="3"/>
+    <path d="M-120 0 Q0 -140 120 0Z" fill="#fff" stroke="#8d5524" stroke-width="3"/>
+    <path d="M-120 0 Q0 -140 120 0" fill="none"/>
+    <rect x="-110" y="40" width="220" height="14" fill="#d9480f"/><rect x="-110" y="58" width="220" height="8" fill="#2b6cb0"/>
+    <path d="M-30 110V50Q0 30 30 50V110Z" fill="#a0522d" stroke="#5a2d00" stroke-width="3"/>
+    <g fill="#d9480f"><circle cx="-70" cy="20" r="6"/><circle cx="70" cy="20" r="6"/><circle cx="0" cy="-45" r="7"/></g>
+    <g class="smoke" transform="translate(0,-70)"><circle r="12"/><circle r="12" style="animation-delay:1.3s"/><circle r="12" style="animation-delay:2.6s"/></g>
+  </g>
+  <!-- семья -->
+  <g font-size="15" font-weight="700" fill="#5a2d00" text-anchor="middle">
+    <g transform="translate(110,520)"><g class="pop" style="--d:1.2s"><g class="hop"><circle cy="-62" r="14" fill="#f4c28a"/><rect x="-14" y="-48" width="28" height="55" rx="10" fill="#2b6cb0"/><text y="30">Папа</text></g></g></g>
+    <g transform="translate(180,520)"><g class="pop" style="--d:1.8s"><g class="hop" style="animation-delay:.2s"><circle cy="-62" r="14" fill="#f4c28a"/><rect x="-16" y="-48" width="32" height="55" rx="12" fill="#c2255c"/><text y="30">Мама</text></g></g></g>
+    <g transform="translate(250,535)"><g class="pop" style="--d:2.4s"><g class="hop" style="animation-delay:.4s"><circle cy="-48" r="12" fill="#f4c28a"/><rect x="-12" y="-36" width="24" height="42" rx="10" fill="#f59f00"/><text y="30">Брат</text></g></g></g>
+    <g transform="translate(305,538)"><g class="pop" style="--d:3s"><g class="hop" style="animation-delay:.6s"><circle cy="-40" r="12" fill="#f4c28a"/><path d="M-12 -28H12L16 6H-16Z" fill="#e8590c"/><text y="30" fill="#c2255c" font-size="18">Севиль</text></g></g></g>
+  </g>
+  <g>
+    <g transform="translate(150,520)"><path class="heart" d="M0 0C-8-10-22 0 0 18C22 0 8-10 0 0Z"/></g>
+    <g transform="translate(220,520)"><path class="heart" style="animation-delay:1.6s" d="M0 0C-8-10-22 0 0 18C22 0 8-10 0 0Z"/></g>
+    <g transform="translate(290,520)"><path class="heart" style="animation-delay:3.2s" d="M0 0C-8-10-22 0 0 18C22 0 8-10 0 0Z"/></g>
+  </g>
+</svg>
+</div>
+<div class="caption"></div>
+<script src="common.js"></script>
+<script>
+begin({
+  lines: ["Моя семья — моё богатство", "Папа, мама, я...", "Я их очень люблю ❤️", "Семья — это счастье!"],
+  music: { root: 57, wave: "triangle", bpm: 84, drum: false, bass: [0, 5, 7, 0],
+    melody: [12,null,15,17, 19,17,15,null, 12,null,15,12, 10,null,12,null, 15,17,19,null, 22,19,17,15, 17,15,12,null, 10,12,null,null] }
+});
+</script>
+</body>
+</html>

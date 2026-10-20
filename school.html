@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Моя школа</title>
+<link rel="stylesheet" href="common.css">
+<style>:root { --sky1: #6ec6ff; --sky2: #d7f1ff; }
+.letter { font-size: 34px; font-weight: 800; opacity: 0; animation: fall 6s linear infinite; }
+@keyframes fall { 0% { opacity: 0; transform: translateY(-40px) rotate(-15deg); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(260px) rotate(20deg); } }
+.bell { transform-box: fill-box; transform-origin: top center; animation: ring 1s ease-in-out infinite; }
+@keyframes ring { 0%,100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
+.hop { animation: hop .9s ease-in-out infinite; }
+@keyframes hop { 50% { transform: translateY(-18px); } }
+.wave { transform-box: fill-box; transform-origin: left center; animation: wave 1s ease-in-out infinite; }
+@keyframes wave { 50% { transform: skewY(-8deg); } }
+</style>
+</head>
+<body>
+<div class="start"><h1>Школа Севиль 🏫</h1><button>▶ Начать</button></div>
+<button class="mute">🔊</button>
+<div class="scene">
+<div class="title">Моя школа<span class="sub">Севиль, 3 класс</span></div>
+<svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice">
+  <g transform="translate(70,150) scale(.8)"><g class="spin"><g class="rays"></g></g><circle r="40" fill="#ffd23f"/></g>
+  <g fill="#fff" class="drift"><ellipse cx="100" cy="230" rx="50" ry="18"/><ellipse cx="130" cy="218" rx="30" ry="16"/></g>
+  <ellipse cx="200" cy="680" rx="380" ry="130" fill="#7bc47f"/>
+  <!-- здание -->
+  <g transform="translate(200,330)">
+    <rect x="-140" y="0" width="280" height="210" fill="#ffd8a8" stroke="#8d5524" stroke-width="3"/>
+    <path d="M-160 0L0 -90L160 0Z" fill="#d9480f" stroke="#8d5524" stroke-width="3"/>
+    <rect x="-40" y="-75" width="80" height="60" fill="#ffe8cc" stroke="#8d5524" stroke-width="3"/>
+    <g class="bell"><path d="M-10 -30Q0 -48 10 -30Z" fill="#f59f00" transform="translate(0,-28)"/></g>
+    <g fill="#8ecae6" stroke="#8d5524" stroke-width="3">
+      <rect x="-120" y="30" width="50" height="50"/><rect x="70" y="30" width="50" height="50"/>
+      <rect x="-120" y="110" width="50" height="50"/><rect x="70" y="110" width="50" height="50"/></g>
+    <rect x="-28" y="120" width="56" height="90" rx="6" fill="#a0522d" stroke="#5a2d00" stroke-width="3"/>
+    <text y="95" text-anchor="middle" font-size="22" font-weight="800" fill="#5a2d00">ШКОЛА</text>
+    <line x1="0" y1="-90" x2="0" y2="-150" stroke="#5a2d00" stroke-width="3"/>
+    <path class="wave" d="M0 -150H46V-120H0Z" fill="#e03131"/>
+  </g>
+  <!-- дети -->
+  <g stroke="#333" stroke-width="2">
+    <g transform="translate(90,575)"><g class="pop" style="--d:1s"><g class="hop"><circle cy="-40" r="13" fill="#f4c28a"/><rect x="-12" y="-26" width="24" height="40" rx="8" fill="#e8590c"/></g></g></g>
+    <g transform="translate(150,585)"><g class="pop" style="--d:1.5s"><g class="hop" style="animation-delay:.2s"><circle cy="-40" r="13" fill="#f4c28a"/><rect x="-12" y="-26" width="24" height="40" rx="8" fill="#2b6cb0"/></g></g></g>
+    <g transform="translate(250,585)"><g class="pop" style="--d:2s"><g class="hop" style="animation-delay:.4s"><circle cy="-40" r="13" fill="#f4c28a"/><rect x="-12" y="-26" width="24" height="40" rx="8" fill="#37b24d"/></g></g></g>
+    <g transform="translate(310,575)"><g class="pop" style="--d:2.5s"><g class="hop" style="animation-delay:.6s"><circle cy="-40" r="13" fill="#f4c28a"/><path d="M-12 -26H12L16 14H-16Z" fill="#c2255c"/></g></g></g>
+  </g>
+  <g fill="#e03131" stroke="none">
+    <text class="letter" x="40" y="260" fill="#e03131">А</text>
+    <text class="letter" x="110" y="240" fill="#2b6cb0" style="animation-delay:1s">Б</text>
+    <text class="letter" x="200" y="250" fill="#f59f00" style="animation-delay:2s">В</text>
+    <text class="letter" x="290" y="240" fill="#37b24d" style="animation-delay:3s">Г</text>
+    <text class="letter" x="350" y="260" fill="#9c36b5" style="animation-delay:4s">5</text>
+  </g>
+</svg>
+</div>
+<div class="caption"></div>
+<script src="common.js"></script>
+<script>
+begin({
+  lines: ["Я иду в школу! 🎒", "В школе я учусь, пишу и дружу", "Учитель меня многому учит", "Знания — это свет ✨"],
+  music: { root: 60, wave: "square", bpm: 126, drum: true, bass: [0, 7, 5, 7],
+    melody: [0,2,4,7, 9,7,4,2, 0,null,4,7, 9,12,9,null, 7,9,12,9, 7,4,2,4, 0,2,4,2, 0,null,null,null] }
+});
+</script>
+</body>
+</html>
