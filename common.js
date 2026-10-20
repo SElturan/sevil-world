@@ -77,3 +77,34 @@ function begin(c) {
     mute.textContent = audio.muted ? "🔇" : "🔊";
   });
 }
+
+// Эффекты поверх картинки: золотые искорки и (по желанию) дым из заданной точки
+function startFx(opts) {
+  opts = opts || {};
+  const scene = document.querySelector(".scene");
+  const cv = document.createElement("canvas");
+  cv.id = "fx"; scene.appendChild(cv);
+  const g = cv.getContext("2d");
+  const fit = () => { cv.width = innerWidth; cv.height = innerHeight; };
+  fit(); addEventListener("resize", fit);
+  const N = 38, p = [];
+  const mk = (init) => ({ x: Math.random() * cv.width, y: init ? Math.random() * cv.height : cv.height + 10,
+    r: 1.5 + Math.random() * 3, v: 0.25 + Math.random() * 0.7, ph: Math.random() * 6.28 });
+  for (let i = 0; i < N; i++) p.push(mk(true));
+  (function loop(t) {
+    g.clearRect(0, 0, cv.width, cv.height);
+    for (const s of p) {
+      s.y -= s.v; s.x += Math.sin(t / 900 + s.ph) * 0.4;
+      if (s.y < -10) Object.assign(s, mk(false));
+      const a = 0.35 + 0.35 * Math.sin(t / 400 + s.ph);
+      g.beginPath(); g.fillStyle = `rgba(255,224,130,${a})`; g.shadowColor = "#ffd23f"; g.shadowBlur = 10;
+      g.arc(s.x, s.y, s.r, 0, 6.28); g.fill();
+    }
+    requestAnimationFrame(loop);
+  })(0);
+  if (opts.smoke) for (let i = 0; i < 3; i++) {
+    const d = document.createElement("div");
+    d.className = "puff"; d.style.left = opts.smoke[0] + "%"; d.style.top = opts.smoke[1] + "%";
+    d.style.animationDelay = i * 1.7 + "s"; scene.appendChild(d);
+  }
+}

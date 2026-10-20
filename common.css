@@ -27,3 +27,20 @@ html, body { height: 100%; overflow: hidden; background: #000; font-family: "Tre
 @keyframes pop { to { opacity: 1; transform: scale(1); } }
 .sway { transform-box: fill-box; transform-origin: bottom center; animation: sway 3s ease-in-out infinite; }
 @keyframes sway { 50% { transform: rotate(6deg); } }
+
+/* картинка из img/ ложится поверх нарисованной сцены; если файла нет, она удаляется и остаётся SVG */
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 60%; animation: kb 28s ease-in-out infinite alternate; }
+@keyframes kb { from { transform: scale(1.03) translate(0,0); } to { transform: scale(1.13) translate(-1.5%,-1.2%); } }
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(30,10,0,.45)); }
+.light { position: absolute; inset: -20%; pointer-events: none; mix-blend-mode: screen; opacity: .35;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,240,190,.55) 50%, transparent 60%); animation: sweep 9s ease-in-out infinite alternate; }
+@keyframes sweep { from { transform: translateX(-25%); } to { transform: translateX(25%); } }
+#fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.puff { position: absolute; width: 9vw; height: 9vw; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.75), rgba(255,255,255,0) 70%); opacity: 0; animation: puff 5s linear infinite; pointer-events: none; }
+@keyframes puff { 0% { opacity: 0; transform: translate(0,0) scale(.4); } 20% { opacity: .85; } 100% { opacity: 0; transform: translate(6vw,-22vh) scale(2.6); } }
+
+/* горизонтальная картинка на вертикальном экране */
+.bg.pan { animation: pan 32s ease-in-out infinite alternate; object-position: 4% 50%; transform: none; }
+@keyframes pan { from { object-position: 4% 50%; } to { object-position: 96% 50%; } }
+.bg.pan2 { animation: pan2 30s ease-in-out infinite alternate; object-position: 22% 50%; transform: none; }
+@keyframes pan2 { from { object-position: 22% 50%; } to { object-position: 78% 50%; } }

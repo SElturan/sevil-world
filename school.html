@@ -54,10 +54,13 @@
     <text class="letter" x="350" y="260" fill="#9c36b5" style="animation-delay:4s">5</text>
   </g>
 </svg>
+<img class="bg" src="img/school.jpg" alt="" onerror="this.remove()">
+<div class="light"></div><div class="vignette"></div>
 </div>
 <div class="caption"></div>
 <script src="common.js"></script>
 <script>
+startFx({ smoke: null });
 begin({
   lines: ["Я иду в школу! 🎒", "В школе я учусь, пишу и дружу", "Учитель меня многому учит", "Знания — это свет ✨"],
   music: { root: 60, wave: "square", bpm: 126, drum: true, bass: [0, 7, 5, 7],
