@@ -8,9 +8,12 @@ document.querySelectorAll(".rays").forEach((g) => {
   g.innerHTML = h;
 });
 
-// Музыка: щипковый инструмент в духе комуза, без аудиофайлов
-function makeMusic(c) {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+// Музыка: щипковый инструмент в духе комуза, без аудиофайлов.
+// Мелодия рендерится в WAV и играет через <audio>: так звук есть и на iPhone в беззвучном режиме.
+async function renderLoop(c) {
+  const sr = 22050, step = 60 / c.bpm / 2, n = c.melody.length;
+  const loop = n * step, tail = step * 3;
+  const ctx = new OfflineAudioContext(1, Math.ceil(sr * (loop + tail)), sr);
   const master = ctx.createGain();
   master.gain.value = 0.6;
   master.connect(ctx.destination);
@@ -27,18 +30,24 @@ function makeMusic(c) {
     o.connect(fl); fl.connect(g); g.connect(master);
     o.start(t); o.stop(t + d + 0.05);
   }
-  const step = 60 / c.bpm / 2;
-  let i = 0, next = ctx.currentTime + 0.1;
-  setInterval(() => {
-    while (next < ctx.currentTime + 0.3) {
-      const n = c.melody[i % c.melody.length];
-      if (n !== null) pluck(c.root + n, next, step * 2.2, 0.35, c.wave);
-      if (i % 8 === 0) pluck(c.root - 12 + c.bass[(i / 8) % c.bass.length], next, step * 7, 0.3, "sine");
-      if (c.drum && i % 4 === 0) pluck(c.root - 24, next, step, 0.35, "sine");
-      next += step; i++;
-    }
-  }, 100);
-  return ctx;
+  for (let i = 0; i < n; i++) {
+    const t = i * step, m = c.melody[i];
+    if (m !== null) pluck(c.root + m, t, step * 2.2, 0.35, c.wave);
+    if (i % 8 === 0) pluck(c.root - 12 + c.bass[(i / 8) % c.bass.length], t, step * 7, 0.3, "sine");
+    if (c.drum && i % 4 === 0) pluck(c.root - 24, t, step, 0.35, "sine");
+  }
+  const buf = await ctx.startRendering();
+  const d = buf.getChannelData(0), L = Math.round(sr * loop), out = new Float32Array(L);
+  out.set(d.subarray(0, L));
+  for (let i = L; i < d.length; i++) out[i - L] += d[i]; // хвост — в начало, чтобы цикл был плавным
+  const w = new DataView(new ArrayBuffer(44 + L * 2));
+  const str = (o, t) => [...t].forEach((ch, k) => w.setUint8(o + k, ch.charCodeAt(0)));
+  str(0, "RIFF"); w.setUint32(4, 36 + L * 2, true); str(8, "WAVEfmt ");
+  w.setUint32(16, 16, true); w.setUint16(20, 1, true); w.setUint16(22, 1, true);
+  w.setUint32(24, sr, true); w.setUint32(28, sr * 2, true); w.setUint16(32, 2, true); w.setUint16(34, 16, true);
+  str(36, "data"); w.setUint32(40, L * 2, true);
+  for (let i = 0; i < L; i++) w.setInt16(44 + i * 2, Math.max(-1, Math.min(1, out[i])) * 32767, true);
+  return URL.createObjectURL(new Blob([w], { type: "audio/wav" }));
 }
 
 // Старт по нажатию (телефон не даёт включить звук сам)
@@ -46,9 +55,14 @@ function begin(c) {
   const start = document.querySelector(".start");
   const mute = document.querySelector(".mute");
   const cap = document.querySelector(".caption");
-  let ctx;
+  const audio = new Audio();
+  audio.loop = true;
+  audio.setAttribute("playsinline", "");
   start.querySelector("button").addEventListener("click", () => {
-    ctx = makeMusic(c.music);
+    // «разблокируем» аудио прямо в момент нажатия, пока рендерится мелодия
+    audio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+    audio.play().catch(() => {});
+    renderLoop(c.music).then((url) => { audio.src = url; return audio.play(); }).catch((e) => console.warn(e));
     start.classList.add("hide");
     document.body.classList.add("go");
     let k = 0;
@@ -59,7 +73,7 @@ function begin(c) {
     say(); setInterval(say, 4500);
   });
   mute.addEventListener("click", () => {
-    if (ctx.state === "running") { ctx.suspend(); mute.textContent = "🔇"; }
-    else { ctx.resume(); mute.textContent = "🔊"; }
+    audio.muted = !audio.muted;
+    mute.textContent = audio.muted ? "🔇" : "🔊";
   });
 }
