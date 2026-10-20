@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff5d3b">
+<title>Мой большой мир — Севиль</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=10">
+</head>
+<body>
+<svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
+
+<main id="app">
+  <section id="world" class="view intro" aria-label="Мой большой мир">
+    <div id="worldArt"></div>
+    <div class="title"><h1 id="wTitle"></h1><p id="wSub"></p></div>
+    <div class="stars" id="stars" aria-label="Открытые места"></div>
+    <div class="hint" id="hint"></div>
+  </section>
+
+  <section id="story" class="view" aria-live="polite">
+    <div id="stage"></div>
+    <div class="topbar"><button class="back" id="back" aria-label="Назад в мой мир">←</button><div class="dots" id="dots"></div></div>
+    <div class="card" id="card">
+      <h2><span class="ic" id="ic"></span><span id="ct"></span></h2>
+      <p id="cp"></p>
+      <div class="nav"><button class="btn prev" id="prev" aria-label="Назад">◀</button><button class="btn next" id="next">Дальше ▶</button></div>
+    </div>
+  </section>
+
+  <button id="mute" aria-label="Выключить звук">🔊</button>
+  <canvas id="confetti"></canvas>
+
+  <div class="overlay hide" id="finale" role="dialog" aria-label="Финал">
+    <div class="badge">🌟</div>
+    <h1 id="fTitle"></h1>
+    <p id="fSub"></p>
+    <button class="go" id="again">Ещё раз ↺</button>
+  </div>
+
+  <div class="overlay" id="start">
+    <div class="badge">🏔️</div>
+    <h1 id="sTitle"></h1>
+    <p id="sSub"></p>
+    <button class="go" id="enter">▶ Войти в мой мир</button>
+    <small>🔊 Включи звук на телефоне</small>
+  </div>
+</main>
+
+<script src="content.js?v=10"></script>
+<script src="art.js?v=10"></script>
+<script src="app.js?v=10"></script>
+</body>
+</html>
