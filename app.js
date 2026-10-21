@@ -1,18 +1,14 @@
 const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const C = CONTENT;
-const SECS = ["land", "family", "school"];
-const PAGES = ["home", ...SECS, "awards"];
-const COLOR = { land: "#d62839", family: "#e8590c", school: "#2b7de9" };
-const HERO = { land: ART.heroLand, family: ART.heroFamily, school: ART.heroSchool };
-
-// ---------- прогресс (хранится в телефоне) ----------
-let P = { seen: {}, done: [], tasks: [] };
-try { P = Object.assign(P, JSON.parse(localStorage.getItem("sevil-v3") || "{}")); } catch (e) {}
-const save = () => { try { localStorage.setItem("sevil-v3", JSON.stringify(P)); } catch (e) {} };
+const stage = $("#stage");
+const MEDALS = [
+  { name: "Патриот", icon: "🇰🇬", c1: "#ff6b6b", c2: "#e8112d" },
+  { name: "Доброе сердце", icon: "💖", c1: "#ff8fa3", c2: "#ff4d6d" },
+  { name: "Юный исследователь", icon: "🔭", c1: "#4cc9f0", c2: "#3a86ff" },
+];
 
 // ---------- звук ----------
-// Мелодия главной рендерится в WAV; песни играют напрямую (iPhone: приглушаются в WAV).
+// Мелодия заставки рендерится в WAV; песни играют напрямую (iPhone: приглушаются в WAV).
 async function renderLoop(c) {
   const sr = 22050, step = 60 / c.bpm / 2, n = c.melody.length, loop = n * step, tail = step * 3;
   const ctx = new OfflineAudioContext(1, Math.ceil(sr * (loop + tail)), sr);
@@ -49,7 +45,7 @@ function wavUrl(chs, sr, gain) {
   for (let i = 0; i < L; i++) for (let c = 0; c < ch; c++, o += 2) w.setInt16(o, Math.max(-1, Math.min(1, chs[c][i] * gain)) * 32767, true);
   return URL.createObjectURL(new Blob([w], { type: "audio/wav" }));
 }
-const BG = 0.28; // громкость песен как фона
+const BG = 0.32; // громкость песен как фона
 async function bakedSong(path) {
   const raw = await (await fetch(path)).arrayBuffer();
   const ac = await new OfflineAudioContext(2, 1, 44100).decodeAudioData(raw);
@@ -72,218 +68,171 @@ const fade = (to, ms) => new Promise((res) => {
 async function track(key) {
   if (curTrack === key) return;
   curTrack = key;
-  await fade(0, 250);
+  await fade(0, 300);
   if (curTrack !== key) return;
   try { audio.src = await getUrl(key); await audio.play(); } catch (e) { console.warn(e); }
-  if (curTrack === key) fade(C.songs[key] && volOK ? BG : 1, 500);
+  if (curTrack === key) fade(C.songs[key] && volOK ? BG : 1, 700);
 }
-// Голос Севиль: файлы voice/<раздел>-<номер карточки>.mp3 и voice/hello.mp3. Нет файла — вежливое сообщение.
+// Голос Севиль: voice/<id сцены>.mp3 и voice/hello.mp3. Нет файла — просто тишина.
 const voice = new Audio();
 voice.setAttribute("playsinline", "");
-function stopVoice() { voice.pause(); $$(".listen.playing").forEach((b) => b.classList.remove("playing")); }
-function playVoice(name, btn, quiet) {
-  const was = btn && btn.classList.contains("playing");
-  stopVoice();
-  if (!name || was) return;
-  voice.onerror = () => { if (btn) btn.classList.remove("playing"); if (!quiet) toast("Голос Севиль скоро появится 🎙️"); };
-  voice.onended = () => btn && btn.classList.remove("playing");
+function playVoice(name) {
+  voice.pause();
+  voice.onerror = () => {};
   voice.src = `voice/${name}.mp3?v=${C.voiceVersion || 1}`;
-  voice.play().then(() => btn && btn.classList.add("playing")).catch(() => {});
+  voice.play().catch(() => {});
 }
-$("#mute").addEventListener("click", () => {
+$("#mute").addEventListener("click", (e) => {
+  e.stopPropagation();
   audio.muted = !audio.muted; voice.muted = audio.muted;
-  $("#mute").innerHTML = icon(audio.muted ? "mute" : "sound");
-  $("#mute").setAttribute("aria-label", audio.muted ? "Включить звук" : "Выключить звук");
+  $("#mute").textContent = audio.muted ? "🔇" : "🔊";
+});
+$("#mute").addEventListener("pointerdown", (e) => e.stopPropagation());
+
+// ---------- частицы (один лёгкий холст) ----------
+const cv = $("#fx"), g = cv.getContext("2d");
+const fx = { type: null, ps: [], last: 0 };
+function fitFx() { cv.width = stage.clientWidth; cv.height = stage.clientHeight; }
+const heart = (x, y, s) => { g.beginPath(); g.moveTo(x, y + s * .3); g.bezierCurveTo(x - s, y - s * .6, x - s * .2, y - s, x, y - s * .3); g.bezierCurveTo(x + s * .2, y - s, x + s, y - s * .6, x, y + s * .3); g.fill(); };
+function spawn(type, initial) {
+  const W = cv.width, H = cv.height, r = Math.random;
+  if (type === "confetti") return { x: r() * W, y: initial ? r() * H * 0.4 - H * 0.4 : -10, v: 2 + r() * 3.5, dx: (r() - 0.5) * 2, s: 5 + r() * 6, rot: r() * 6, vr: (r() - 0.5) * 0.3, c: ["#ff5d3b", "#ffd23f", "#26a69a", "#2b7de9", "#ff8fd0", "#8be67b"][(r() * 6) | 0] };
+  return { x: r() * W, y: initial ? r() * H : H + 20, v: 0.35 + r() * 0.9, dx: (r() - 0.5) * 0.4, s: type === "hearts" ? 7 + r() * 9 : 1.5 + r() * 3, ph: r() * 6.28 };
+}
+function setFx(type, count = 26) {
+  fx.type = type; cv.width = cv.width; // сброс
+  fx.ps = type ? Array.from({ length: type === "confetti" ? 110 : count }, () => spawn(type, true)) : [];
+}
+function frame(t) {
+  requestAnimationFrame(frame);
+  if (!fx.type || stage.classList.contains("paused") || t - fx.last < 33) return; // ~30 кадров в секунду
+  fx.last = t;
+  const W = cv.width, H = cv.height;
+  g.clearRect(0, 0, W, H);
+  for (const p of fx.ps) {
+    p.y += fx.type === "confetti" ? p.v : -p.v; p.x += p.dx + (fx.type === "confetti" ? 0 : Math.sin(t / 700 + p.ph) * 0.35);
+    if (fx.type === "confetti") { p.rot += p.vr; if (p.y > H + 10) Object.assign(p, spawn("confetti", false)); g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore(); continue; }
+    if (p.y < -20) Object.assign(p, spawn(fx.type, false));
+    const a = 0.45 + 0.4 * Math.sin(t / 380 + p.ph);
+    if (fx.type === "hearts") { g.fillStyle = `rgba(255,120,150,${a})`; heart(p.x, p.y, p.s); }
+    else if (fx.type === "sparks") { g.fillStyle = `rgba(255,244,190,${a})`; g.fillRect(p.x - p.s * 0.2, p.y - p.s * 1.6, p.s * 0.4, p.s * 3.2); g.fillRect(p.x - p.s * 1.6, p.y - p.s * 0.2, p.s * 3.2, p.s * 0.4); }
+    else { g.fillStyle = `rgba(255,226,140,${a * 0.55})`; g.beginPath(); g.arc(p.x, p.y, p.s * 1.9, 0, 6.3); g.fill(); g.fillStyle = `rgba(255,248,210,${a})`; g.beginPath(); g.arc(p.x, p.y, p.s * 0.8, 0, 6.3); g.fill(); }
+  }
+}
+
+// ---------- параллакс: наклон телефона или движение мыши ----------
+let lastPar = 0;
+function setPar(x, y) {
+  const now = performance.now(); if (now - lastPar < 40) return; lastPar = now;
+  stage.style.setProperty("--px", x.toFixed(1)); stage.style.setProperty("--py", y.toFixed(1));
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+window.addEventListener("deviceorientation", (e) => { if (e.gamma == null) return; setPar(clamp(e.gamma, -30, 30) / 30 * 22, clamp((e.beta || 45) - 45, -30, 30) / 30 * 14); });
+stage.addEventListener("pointermove", (e) => {
+  if (e.pointerType !== "mouse") return;
+  const r = stage.getBoundingClientRect();
+  setPar(((e.clientX - r.left) / r.width - 0.5) * 44, ((e.clientY - r.top) / r.height - 0.5) * 28);
 });
 
-// ---------- мелочи ----------
-let toastT;
-function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
-function burst(x, y, emoji = "❤️") {
-  for (let i = 0; i < 4; i++) {
-    const s = document.createElement("span");
-    s.className = "burst"; s.textContent = emoji;
-    s.style.left = x + (Math.random() - 0.5) * 40 + "px"; s.style.top = y + "px"; s.style.animationDelay = i * 0.07 + "s";
-    document.body.appendChild(s); setTimeout(() => s.remove(), 1400);
-  }
+// ---------- сцены ----------
+const parLayers = (layers) => layers.map(([cls, d, svg]) => `<div class="par" style="--d:${d}"><div class="lay ${cls}">${svg}</div></div>`).join("");
+function words(el, text, step = 0.07, base = 0.15) { el.innerHTML = text.split(" ").map((w, i) => `<span class="w" style="animation-delay:${base + i * step}s">${w}</span>`).join(" "); }
+function chipsHTML(sc) {
+  const W = stage.clientWidth, H = stage.clientHeight, pw = W * 1.1, ph = H * 1.1, k = Math.max(pw / 400, ph / 800), ox = (pw - 400 * k) / 2 - W * 0.05, oy = (ph - 800 * k) / 2 - H * 0.05;
+  return C.people.map((p, i) => {
+    const [ax, ay] = SCENE.anchors[i];
+    return `<span class="chip" style="left:${(ox + ax * k).toFixed(0)}px;top:${(oy + ay * k).toFixed(0)}px;--d:${(0.9 + i).toFixed(1)}s">${p.name ? `${p.role} ${p.name}` : p.role}</span>`;
+  }).join("");
 }
-function confetti(count = 120) {
-  const cv = $("#confetti"), g = cv.getContext("2d"), dpr = devicePixelRatio || 1;
-  cv.width = cv.clientWidth * dpr; cv.height = cv.clientHeight * dpr;
-  const colors = ["#d62839", "#ffd23f", "#26a69a", "#2b7de9", "#ff8fd0", "#8be67b"];
-  const ps = Array.from({ length: count }, () => ({
-    x: Math.random() * cv.width, y: -Math.random() * cv.height * 0.6, w: (6 + Math.random() * 8) * dpr,
-    v: (2 + Math.random() * 4) * dpr, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3, c: colors[(Math.random() * colors.length) | 0], dx: (Math.random() - 0.5) * 2,
-  }));
-  const t0 = performance.now();
-  (function loop(t) {
-    g.clearRect(0, 0, cv.width, cv.height);
-    for (const p of ps) { p.y += p.v; p.x += p.dx; p.r += p.vr; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2); g.restore(); }
-    if (t - t0 < 4500) requestAnimationFrame(loop); else g.clearRect(0, 0, cv.width, cv.height);
-  })(t0);
+function buildScene(i) {
+  const s = C.scenes[i], el = document.createElement("div");
+  el.className = "scene" + (s.scene === "family" ? " warm" : "");
+  el.style.setProperty("--dur", s.dur + "s");
+  let inner = "";
+  if (s.img) inner = `<div class="photoWrap"><div class="par" style="--d:.45"><img class="photo" src="${s.img}" alt="" style="--x0:${s.from[0]};--x1:${s.to[0]};--s0:${s.from[1]};--s1:${s.to[1]};--o:${s.origin}"></div></div>`;
+  else inner = parLayers(SCENE.layers[s.scene](s));
+  let extra = "";
+  if (s.scene === "family") extra += `<div class="glow"></div>`;
+  if (s.names) extra += chipsHTML(s);
+  if (s.letters) extra += ["А", "Б", "2+3", "ABC", "π", "✏️", "📚", "🔬"].map((t, k) => `<span class="letter" style="left:${8 + ((k * 37) % 80)}%;--d:${(k * 0.55).toFixed(2)}s">${t}</span>`).join("");
+  el.innerHTML = `<div class="camera${s.scene ? " push" : ""}">${inner}${extra}</div><div class="sweep"></div>`;
+  return el;
 }
-const seenCount = (id) => (P.seen[id] || []).length;
-const total = (id) => C.sections[id].blocks.length;
 
-// ---------- построение страниц ----------
-$("#defs").innerHTML = A.defs();
-$("#brandTitle").textContent = C.title;
-$("#mute").innerHTML = icon("sound");
-$("#tabs").innerHTML = [["home", "Главная"], ["land", "Родина"], ["family", "Семья"], ["school", "Школа"], ["awards", "Награды"]]
-  .map(([id, t]) => `<button class="tab" data-go="${id}"><span class="pill">${icon(id)}</span>${t}</button>`).join("");
+let idx = -1, cur = null, started = false;
+function renderSegs() {
+  $("#segs").innerHTML = C.scenes.map((_, k) => `<i class="${k < idx ? "done" : k === idx ? "cur" : ""}"><b></b></i>`).join("");
+}
+function go(i) {
+  if (i < 0) i = 0;
+  if (i >= C.scenes.length) return finish();
+  idx = i;
+  const s = C.scenes[i], el = buildScene(i);
+  $("#scenes").appendChild(el);
+  void el.offsetWidth; el.classList.add("on");
+  if (cur) { const old = cur; old.classList.remove("on"); setTimeout(() => old.remove(), 1100); }
+  cur = el;
+  stage.style.setProperty("--dur", s.dur + "s");
+  $("#area").textContent = s.area; words($("#line"), s.text);
+  renderSegs();
+  setFx(s.fx);
+  track(s.music || "home");
+  playVoice(s.id);
+}
+$("#segs").addEventListener("animationend", (e) => { if (e.animationName === "fill" && started) go(idx + 1); });
 
-function blockHTML(sec, b, i) {
-  const idx = i + 1;
-  const head = `<div class="cardhead"><span class="chip">${b.label}</span><button class="listen" data-voice="${sec}-${idx}" aria-label="Слушать: ${b.t}">${icon("sound")}<span>Слушать</span></button></div>`;
-  const title = `<h2>${b.t}</h2>`;
-  let body = "";
-  if (b.type === "text") body = `${title}${b.art ? `<figure class="art">${ART[b.art]()}</figure>` : ""}<p>${b.p}</p>`;
-  else if (["tree", "bag", "music", "map"].includes(b.type)) body = `${title}<p>${b.p}</p><figure class="fig">${ART[b.type]()}</figure><div class="info"><b>Нажми на картинку</b>Здесь появится рассказ.</div>`;
-  else if (b.type === "tasks") body = `${title}<p>${b.p}</p>${b.tasks.map((t, k) => { const key = `${sec}:${k}`; const on = P.tasks.includes(key); return `<button class="task ${on ? "done" : ""}" data-key="${key}"><span class="chk">${on ? "❤️" : ""}</span>${t}</button>`; }).join("")}`;
-  else if (b.type === "reasons") body = `${title}<p>${b.p}</p><div class="reasonBox" data-i="0">Нажми на кнопку 👇</div><button class="btn ghost wide reasonBtn">💖 Показать</button>`;
-  else if (b.type === "end") body = `${title}<p>${b.p}</p><div class="finish"><small data-fin-note></small><button class="btn primary medalbtn" data-sec="${sec}"></button></div>`;
-  return `<article class="card" data-sec="${sec}" data-i="${i}" data-end="${b.type === "end" ? 1 : 0}">${head}${body}</article>`;
-}
-const sectionHTML = (sec) => {
-  const s = C.sections[sec], n = SECS.indexOf(sec) + 1;
-  return `<section class="page" data-page="${sec}">
-    <div class="hero">${HERO[sec]()}</div>
-    <div class="sheet">
-      <div class="titlebar"><div><div class="eyebrow">Раздел ${n} из 3</div><h1>${s.title}</h1></div><span class="count" data-count="${sec}"></span></div>
-      <div class="lead">${s.lead}</div>
-      <div class="bar"><i data-bar="${sec}"></i></div>
-      ${s.blocks.map((b, i) => blockHTML(sec, b, i)).join("")}
-    </div></section>`;
-};
-const hello = C.hello.split("! ");
-const homeHTML = `<section class="page" data-page="home">
-  <div class="homeHero"><div class="homeSky">${ART.heroHome()}</div>
-    <div class="homeCopy"><img class="arch" src="img/sevil.jpg" alt="Севиль"><div class="bubble"><b>${hello[0]}!</b>${hello.slice(1).join("! ")}</div></div></div>
-  <div class="sheet">
-    <div class="titlebar"><div><div class="eyebrow">${C.name}, ${C.grade}</div><h1>${C.title}</h1></div></div>
-    <button class="btn ghost wide" data-voice="hello" style="margin-bottom:16px">Слушать приветствие</button>
-    <div class="h2">Куда отправимся?</div>
-    ${SECS.map((id) => `<button class="route" data-go="${id}" style="--c:${COLOR[id]}"><div class="thumb">${HERO[id]()}</div>
-      <div class="rbody"><div class="rtext"><h3>${C.sections[id].title}</h3><p>${C.sections[id].lead}</p><div class="mini"><i data-mini="${id}"></i></div></div><span class="go">${icon("back")}</span></div></button>`).join("")}
-  </div></section>`;
-$("#pages").innerHTML = homeHTML + SECS.map(sectionHTML).join("") + `<section class="page" data-page="awards"><div class="sheet" id="awardsBox" style="margin-top:0;padding-top:20px"></div></section>`;
-// на главной маленькие картинки не двигаются
-function refreshProgress() {
-  SECS.forEach((id) => {
-    const pct = Math.round((seenCount(id) / total(id)) * 100);
-    const bar = $(`[data-bar="${id}"]`), mini = $(`[data-mini="${id}"]`), cnt = $(`[data-count="${id}"]`);
-    if (bar) bar.style.width = pct + "%"; if (mini) mini.style.width = pct + "%";
-    if (cnt) cnt.textContent = P.done.includes(id) ? "✓ Пройдено" : `${seenCount(id)} из ${total(id)}`;
-    refreshFinish(id);
-  });
-}
-function refreshFinish(id) {
-  const btn = $(`.medalbtn[data-sec="${id}"]`), note = $(`.card[data-sec="${id}"][data-end="1"] [data-fin-note]`);
-  if (!btn) return;
-  const need = total(id) - 1, got = (P.seen[id] || []).filter((i) => !C.sections[id].blocks[i].type.startsWith("end")).length;
-  if (P.done.includes(id)) { btn.textContent = "Смотреть медаль"; btn.disabled = false; note.textContent = "Раздел пройден 🎉"; }
-  else if (got >= need) { btn.textContent = "Получить медаль 🏅"; btn.disabled = false; note.textContent = "Ты прочитал всё. Забирай награду!"; }
-  else { btn.textContent = "Медаль скоро"; btn.disabled = true; note.textContent = `Прочитай карточки выше: ${got} из ${need}`; }
-}
-const io = new IntersectionObserver((entries) => entries.forEach((e) => {
-  if (!e.isIntersecting) return;
-  e.target.classList.add("in");
-  const r = e.intersectionRect, b = e.boundingClientRect;
-  if (r.height >= Math.min(b.height * 0.5, 240)) {
-    const sec = e.target.dataset.sec, i = +e.target.dataset.i;
-    P.seen[sec] = P.seen[sec] || [];
-    if (!P.seen[sec].includes(i)) { P.seen[sec].push(i); save(); refreshProgress(); }
-  }
-}), { root: $("#pages"), threshold: [0.02, 0.3, 0.6] });
-$$(".card").forEach((c) => io.observe(c));
-
-// ---------- действия ----------
-$("#pages").addEventListener("click", (e) => {
-  const t = e.target;
-  const go = t.closest("[data-go]"); if (go) return void (location.hash = go.dataset.go);
-  const lis = t.closest("[data-voice]"); if (lis) return playVoice(lis.dataset.voice, lis.classList.contains("listen") ? lis : null);
-  const mkEl = t.closest(".mk");
-  if (mkEl) {
-    mkEl.classList.add("seen");
-    const box = $(".info", mkEl.closest(".card")); box.innerHTML = `<b>${mkEl.dataset.t}</b>${mkEl.dataset.p}`;
-    box.classList.remove("pop"); void box.offsetWidth; box.classList.add("pop");
-    const r = mkEl.getBoundingClientRect(); burst(r.left + r.width / 2, r.top, "✨");
-    return;
-  }
-  const task = t.closest(".task");
-  if (task) {
-    const k = task.dataset.key;
-    if (!P.tasks.includes(k)) { P.tasks.push(k); save(); task.classList.add("done"); task.firstElementChild.textContent = "❤️"; const r = task.getBoundingClientRect(); burst(r.left + 30, r.top); }
-    return;
-  }
-  const rb = t.closest(".reasonBtn");
-  if (rb) {
-    const box = rb.previousElementSibling, i = +box.dataset.i;
-    box.textContent = C.reasons[i % C.reasons.length]; box.dataset.i = i + 1;
-    const r = rb.getBoundingClientRect(); burst(r.left + r.width / 2, r.top);
-    rb.textContent = i + 1 >= C.reasons.length ? "💖 Ещё раз" : "💖 Ещё";
-    return;
-  }
-  const mb = t.closest(".medalbtn");
-  if (mb && !mb.disabled) { const id = mb.dataset.sec; P.done.includes(id) ? (location.hash = "awards") : finish(id); }
+// нажатия: справа дальше, слева назад, удержание — пауза
+let holdT = null, held = false;
+const zones = $("#zones");
+zones.addEventListener("pointerdown", () => { held = false; holdT = setTimeout(() => { held = true; stage.classList.add("paused"); voice.pause(); }, 220); });
+const release = () => { clearTimeout(holdT); if (held) { stage.classList.remove("paused"); voice.play().catch(() => {}); } };
+zones.addEventListener("pointerup", (e) => {
+  release();
+  if (held || !started) return;
+  const r = stage.getBoundingClientRect();
+  go((e.clientX - r.left) / r.width < 0.3 ? idx - 1 : idx + 1);
 });
-$("#tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-go]"); if (b) location.hash = b.dataset.go; });
-$("#splash").addEventListener("click", (e) => { if (e.target.closest("[data-voice]")) playVoice("hello"); });
+zones.addEventListener("pointercancel", release);
+zones.addEventListener("pointerleave", release);
 
-function finish(id) {
-  const m = C.sections[id].medal;
-  stopVoice();
-  $("#mArt").innerHTML = A.medal(m);
-  $("#mName").textContent = `Медаль «${m.name}»`;
-  $("#mText").textContent = m.text;
-  $("#medal").classList.add("show");
-  confetti(120);
-  $("#mOk").onclick = () => {
-    $("#medal").classList.remove("show");
-    if (!P.done.includes(id)) { P.done.push(id); save(); }
-    refreshProgress();
-    location.hash = P.done.length === 3 ? "awards" : "home";
-  };
-}
-function renderAwards() {
-  const hearts = P.tasks.length;
-  $("#awardsBox").innerHTML = `<div class="eyebrow">Мои достижения</div><h1 style="font-family:var(--head);font-weight:900;font-size:30px;margin:2px 0 14px">Награды</h1>
-    <div class="medals">${SECS.map((id) => { const m = C.sections[id].medal, got = P.done.includes(id); return `<div class="medalBox ${got ? "" : "lock"}">${A.medal(m)}<b>${m.name}</b><span>${got ? "Получена" : "Пока закрыта"}</span></div>`; }).join("")}</div>
-    <div class="stat"><em>🏅</em>Медалей<strong>${P.done.length} из 3</strong></div>
-    <div class="stat"><em>❤️</em>Добрых дел<strong>${hearts}</strong></div>
-    <div class="stat"><em>📖</em>Прочитано карточек<strong>${SECS.reduce((s, id) => s + seenCount(id), 0)}</strong></div>
-    ${P.done.length === 3 ? `<div class="finale"><div class="three">${SECS.map((id) => A.medal(C.sections[id].medal)).join("")}</div><p>${C.finale}</p></div>` : `<p style="margin-top:12px;font-weight:700;color:var(--muted)">Пройди все три раздела, и откроется финал.</p>`}`;
-  if (P.done.length === 3 && !renderAwards.shown) { renderAwards.shown = true; confetti(90); }
-}
+// ---------- заставка и финал ----------
+const sceneBg = (id, layers) => { $(id).innerHTML = parLayers(layers); };
+sceneBg("#introLayers", SCENE.layers.title());
+sceneBg("#finaleLayers", SCENE.layers.title());
+words($("#iTitle"), C.title, 0.12, 0.3);
+$("#iHello").textContent = C.hello;
+$("#enter").textContent = C.tap;
+$("#fCredit").textContent = `${C.name}, ${C.grade} · школа «${C.school}»`;
+$("#fText").textContent = C.finaleText;
 
-// ---------- переходы между страницами ----------
-function show(id) {
-  if (!PAGES.includes(id)) id = "home";
-  $$(".page").forEach((p) => p.classList.toggle("on", p.dataset.page === id));
-  $$(".tab").forEach((t) => t.classList.toggle("on", t.dataset.go === id));
-  $("#app").dataset.theme = id;
-  $("#pages").scrollTop = 0;
-  stopVoice();
-  if (id === "awards") renderAwards();
-  track(SECS.includes(id) ? id : "home");
+function finish() {
+  started = false; idx = C.scenes.length;
+  stage.classList.remove("started");
+  renderSegs();
+  $("#meds").classList.remove("join");
+  $("#meds").innerHTML = MEDALS.map((m, k) => `<div class="med med${k}">${A.medal(m)}</div>`).join("");
+  $("#finale").classList.add("on");
+  setTimeout(() => $("#meds").classList.add("join"), 500);
+  setFx("confetti");
+  track("home");
+  playVoice("finale");
 }
-window.addEventListener("hashchange", () => { if (started) show(location.hash.slice(1)); });
+$("#again").addEventListener("click", () => { $("#finale").classList.remove("on"); started = true; stage.classList.add("started"); go(0); });
 
-// ---------- старт ----------
-let started = false;
-$("#splashSky").innerHTML = ART.heroHome();
-$("#sTitle").textContent = C.title;
-$("#sHello").textContent = C.hello;
-$("#enter").textContent = C.startButton + " →";
 const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 $("#enter").addEventListener("click", () => {
   audio.src = SILENT; audio.play().catch(() => {});
   voice.src = SILENT; voice.play().catch(() => {});
-  started = true;
-  $("#splash").classList.add("hide");
-  refreshProgress();
-  show(location.hash.slice(1));
-  setTimeout(() => playVoice("hello", null, true), 400);
-  if (!volOK) SECS.forEach((k, i) => setTimeout(() => getUrl(k), 6000 + i * 6000)); // iPhone: готовим песни по одной
+  const D = window.DeviceOrientationEvent;
+  if (D && typeof D.requestPermission === "function") D.requestPermission().catch(() => {});
+  $("#intro").classList.add("hide");
+  started = true; stage.classList.add("started");
+  $("#hint").classList.add("show"); setTimeout(() => $("#hint").classList.remove("show"), 4500);
+  go(0);
+  if (!volOK) Object.keys(C.songs).forEach((k, i) => setTimeout(() => getUrl(k), 5000 + i * 6000)); // iPhone: готовим песни по одной
 });
-refreshProgress();
+
+$("#defs").innerHTML = A.defs() + EXTRA_DEFS;
+fitFx(); addEventListener("resize", fitFx);
+requestAnimationFrame(frame);
+setFx("dust", 22); // на заставке тоже живые искорки
