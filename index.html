@@ -8,18 +8,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Nunito:wght@700;800&display=swap&subset=cyrillic" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=54">
+<link rel="stylesheet" href="style.css?v=60">
 </head>
 <body>
 <svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
 
 <div id="stage">
-  <!-- Главная страница книги: большой мир -->
+  <!-- Главная: три мира рядом, как на диораме (школа · семья · Родина) -->
   <section id="hub" aria-label="Мой большой мир">
-    <div id="hubLayers"></div>
-    <div id="spots"></div>
+    <div id="hubWall"></div>
     <div class="medalrow" id="medalrow" aria-label="Медали"></div>
-    <div class="hubHint" id="hubHint">Выбери: семья, школа или Родина</div>
+    <header class="hubTitle"><div class="ribbon"><b>МОЙ БОЛЬШОЙ МИР</b><span>ШКОЛА · СЕМЬЯ · РОДИНА</span></div></header>
+    <div id="worlds"></div>
+    <button class="chev l" id="prevW" aria-label="Влево">‹</button>
+    <button class="chev r" id="nextW" aria-label="Вправо">›</button>
+    <div class="hubBottom"><button class="tapbtn" id="cta"></button><div class="dotsW" id="dotsW"></div></div>
   </section>
 
   <!-- Рассказ -->
@@ -63,20 +66,24 @@
     </div>
   </section>
 
-  <!-- Обложка книги -->
-  <section class="book" id="book" aria-label="Обложка">
-    <div class="cover" id="cover">
-      <div class="face front"><div id="coverArt"></div><div class="rays big gold"></div><button class="tapbtn" id="enter"></button></div>
-      <div class="face back"></div>
+  <!-- Заставка -->
+  <section class="intro" id="intro">
+    <div class="introLayers" id="introLayers"></div>
+    <div class="rays big"></div>
+    <div class="introBody">
+      <img class="arch" src="img/sevil.jpg" alt="Севиль" width="150" height="240">
+      <h1 id="iTitle"></h1>
+      <p id="iHello"></p>
+      <button class="tapbtn" id="enter"></button>
     </div>
   </section>
 </div>
 
-<script src="content.js?v=54"></script>
-<script src="art.js?v=54"></script>
-<script src="art2.js?v=54"></script>
-<script src="chars.js?v=54"></script>
-<script src="paper.js?v=54"></script>
-<script src="app.js?v=54"></script>
+<script src="content.js?v=60"></script>
+<script src="art.js?v=60"></script>
+<script src="art2.js?v=60"></script>
+<script src="chars.js?v=60"></script>
+<script src="paper.js?v=60"></script>
+<script src="app.js?v=60"></script>
 </body>
 </html>

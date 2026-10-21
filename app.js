@@ -1,7 +1,7 @@
 const $ = (s, r = document) => r.querySelector(s);
 const C = CONTENT;
 const stage = $("#stage");
-const SECS = ["family", "school", "land"];
+const SECS = ["school", "family", "land"]; // порядок как на диораме: школа · семья · Родина
 const ANCHORS = [[62, 372], [128, 372], [138, 430], [262, 430], [270, 372], [338, 372]]; // подписи над головами
 
 // ---------- прогресс (хранится в телефоне) ----------
@@ -128,29 +128,42 @@ const parLayers = (layers) => layers.map(([cls, d, svg]) => `<div class="par" st
 function words(el, text, step = 0.07, base = 0.15) { el.innerHTML = text.split(" ").map((w, i) => `<span class="w" style="animation-delay:${base + i * step}s">${w}</span>`).join(" "); }
 const mapK = (W, H) => { const pw = W * 1.1, ph = H * 1.1, k = Math.max(pw / 400, ph / 800); return { k, ox: (pw - 400 * k) / 2 - W * 0.05, oy: (ph - 800 * k) / 2 - H * 0.05 }; };
 
-// ---------- главная страница книги ----------
+// ---------- главная: три мира рядом ----------
 $("#defs").innerHTML = A.defs() + EXTRA_DEFS;
-const hl = (cls, d, svg) => `<div class="hl ${cls}"><div class="par" style="--d:${d}"><div class="lay">${svg}</div></div></div>`;
-$("#hubLayers").innerHTML = hl("wall", 0.08, PAPER.wall()) + hl("tree", 0.3, PAPER.tree()) + hl("boxes", 0.45, PAPER.boxes()) + hl("fx", 0.6, PAPER.hubFx());
-const SPOTS = [
-  { sec: "family", rect: [22, 56, 356, 520], chip: [200, 126], label: "Семья ❤️" },
-  { sec: "school", rect: [10, 628, 184, 150], chip: [102, 640], label: "Школа 📚" },
-  { sec: "land", rect: [206, 628, 184, 150], chip: [298, 640], label: "Родина 🇰🇬" },
-];
-function placeSpots() {
-  const W = stage.clientWidth, H = stage.clientHeight, { k, ox, oy } = mapK(W, H);
-  $("#spots").innerHTML = SPOTS.map((s) => {
-    const [x, y, w, h] = s.rect, l = ox + x * k, t = oy + y * k, pw = w * k, ph = h * k;
-    const cx = ((s.chip[0] - x) / w) * 100, cy = ((s.chip[1] - y) / h) * 100;
-    return `<button class="spot${P.done.includes(s.sec) ? " done" : ""}" data-sec="${s.sec}" aria-label="Открыть: ${C.sections[s.sec].title}" style="left:${l.toFixed(0)}px;top:${t.toFixed(0)}px;width:${pw.toFixed(0)}px;height:${ph.toFixed(0)}px"><span class="lbl" style="left:${cx.toFixed(1)}%;top:${cy.toFixed(1)}%">${s.label}</span></button>`;
-  }).join("");
+$("#hubWall").innerHTML = PAPER.wall();
+const SIGN = { school: "ШКОЛА", family: "СЕМЬЯ", land: "РОДИНА" };
+const CTA = { school: "▶ Смотреть: Школа", family: "▶ Смотреть: Семья", land: "▶ Смотреть: Родина" };
+let sel = 1;
+$("#worlds").innerHTML = SECS.map((id, i) => `<div class="world" data-sec="${id}" style="--i:${i}"><div class="wcard">${parLayers(PAPER.cards[id]())}<div class="sign">${SIGN[id]}</div><div class="doneMark">✓</div></div></div>`).join("");
+function layoutWorlds() {
+  $("#worlds").style.setProperty("--sel", sel);
+  document.querySelectorAll(".world").forEach((w, i) => w.classList.toggle("sel", i === sel));
+  $("#cta").textContent = CTA[SECS[sel]];
+  $("#dotsW").innerHTML = SECS.map((_, i) => `<i class="${i === sel ? "on" : ""}"></i>`).join("");
+  $("#prevW").style.visibility = sel === 0 ? "hidden" : "visible"; $("#nextW").style.visibility = sel === SECS.length - 1 ? "hidden" : "visible";
 }
+function pick(i) { sel = Math.max(0, Math.min(SECS.length - 1, i)); layoutWorlds(); }
+// свайп влево/вправо; касание по боковому миру выбирает его, по центральному открывает
+let sx = null, sdx = 0;
+$("#worlds").addEventListener("pointerdown", (e) => { sx = e.clientX; sdx = 0; });
+$("#worlds").addEventListener("pointermove", (e) => { if (sx !== null) sdx = e.clientX - sx; });
+$("#worlds").addEventListener("pointerup", (e) => {
+  if (sx === null) return; const dx = sdx; sx = null;
+  if (Math.abs(dx) > 40) return pick(sel + (dx < 0 ? 1 : -1));
+  const w = e.target.closest(".world"); if (!w) return;
+  const i = SECS.indexOf(w.dataset.sec);
+  i === sel ? openSection(w.dataset.sec) : pick(i);
+});
+$("#worlds").addEventListener("pointercancel", () => { sx = null; });
+$("#prevW").addEventListener("click", () => pick(sel - 1));
+$("#nextW").addEventListener("click", () => pick(sel + 1));
+$("#cta").addEventListener("click", () => openSection(SECS[sel]));
+document.addEventListener("keydown", (e) => { if (stage.classList.contains("story")) return; if (e.key === "ArrowLeft") pick(sel - 1); else if (e.key === "ArrowRight") pick(sel + 1); else if (e.key === "Enter") openSection(SECS[sel]); });
 function renderMedals() {
   $("#medalrow").innerHTML = SECS.map((id) => `<span class="mdot ${P.done.includes(id) ? "on" : ""}" title="${C.sections[id].medal.name}">${C.sections[id].medal.icon}</span>`).join("");
-  placeSpots();
+  document.querySelectorAll(".world").forEach((w) => w.classList.toggle("done", P.done.includes(w.dataset.sec)));
 }
-$("#spots").addEventListener("click", (e) => { const b = e.target.closest(".spot"); if (b) openSection(b.dataset.sec); });
-addEventListener("resize", () => { fitFx(); placeSpots(); });
+addEventListener("resize", fitFx);
 
 // ---------- рассказ ----------
 function buildScene(s) {
@@ -237,8 +250,10 @@ function showFinale() {
 }
 $("#again").addEventListener("click", () => { $("#finale").classList.remove("on"); stage.classList.remove("fin"); setFx(null); voice.pause(); });
 
-// ---------- обложка ----------
-$("#coverArt").innerHTML = PAPER.cover();
+// ---------- заставка ----------
+$("#introLayers").innerHTML = parLayers([["sky", 0.05, PAPER.sunset()], ["clouds", 0.12, PAPER.clouds()], ["mid", 0.3, PAPER.titleMid()]]);
+words($("#iTitle"), C.title, 0.12, 0.3);
+$("#iHello").textContent = C.hello;
 $("#enter").textContent = C.tap;
 const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 $("#enter").addEventListener("click", () => {
@@ -246,11 +261,10 @@ $("#enter").addEventListener("click", () => {
   voice.src = SILENT; voice.play().catch(() => {});
   const D = window.DeviceOrientationEvent;
   if (D && typeof D.requestPermission === "function") D.requestPermission().catch(() => {});
-  $("#book").classList.add("open");
-  setTimeout(() => $("#hub").classList.add("rise"), 800);
-  setTimeout(() => $("#book").classList.add("gone"), 2100);
+  $("#intro").classList.add("hide");
+  setTimeout(() => $("#hub").classList.add("rise"), 350);
   track("home");
-  setTimeout(() => playVoice("hello"), 900);
+  setTimeout(() => playVoice("hello"), 600);
   if (!volOK) Object.keys(C.songs).forEach((k, i) => setTimeout(() => getUrl(k), 6000 + i * 6000)); // iPhone: готовим песни по одной
 });
-fitFx(); renderMedals(); requestAnimationFrame(frame);
+fitFx(); layoutWorlds(); renderMedals(); requestAnimationFrame(frame);

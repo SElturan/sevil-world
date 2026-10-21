@@ -146,3 +146,21 @@ PAPER.layers = {
   school: (o) => [["sky", 0.05, PAPER.morning()], ["clouds", 0.12, PAPER.clouds()], ["mid", 0.3, PAPER.schoolMid()], ["flag", 0.3, PAPER.schoolFlag()], ...(o.bus ? [["bus", 0.45, PAPER.bus()]] : []), ["front", 0.6, PAPER.schoolFront()]],
 };
 PAPER.pano = () => [["sky", 0, PAPER.panoSky()], ["clouds", 0, PAPER.panoClouds()], ["mid", 0, PAPER.panoMid()], ["front", 0, PAPER.panoFront()]];
+
+// ---------- три мира для главного экрана: школа · семья · Родина ----------
+PAPER.titleMid = () => L(`${A.mountains(150)}<path d="M-60 640 Q100 600 220 636 T460 620 V1300 H-60Z" fill="url(#grass)" stroke="#2f8f4e" stroke-width="2.5"/><rect x="-60" y="300" width="520" height="900" fill="url(#warmTint)"/>`);
+PAPER.landMid = () => L(`${A.mountains(60)}<rect x="-60" y="450" width="520" height="90" fill="url(#haze)" opacity=".5"/>
+  <path d="M-60 520 Q80 490 200 518 T460 504 V1300 H-60Z" fill="url(#grass2)" stroke="#2f8f4e" stroke-width="2.5"/>
+  ${A.lake(200, 540, 200, 26)}
+  <path d="M-60 590 Q100 560 230 590 T460 574 V1300 H-60Z" fill="url(#grass)" stroke="#2f8f4e" stroke-width="2.5"/>
+  ${A.tree(372, 612, 1.1)}${A.yurt(290, 634, 1.0, false)}${A.yurt(112, 648, .62, false)}
+  ${A.flower(40, 690, "#ff5d73")}${A.flower(170, 706, "#ffd23f")}${A.flower(350, 700, "#ff8fd0")}`);
+PAPER.landFront = () => L(`${A.flag(66, 650, 1.35)}${A.smoke(290, 634, 1.0)}${PERSON.make("sevil", { x: 196, y: 690, s: 1.45, cls: "bob" })}
+  <g class="glide">${A.eagle(250, 250, .9)}</g>
+  <g transform="translate(160,548)"><g class="boat"><path d="M-22 0 H22 L16 10 H-16Z" fill="#e8433f" stroke="#4a2f22" stroke-width="2.2"/><path d="M0 0 V-30 L18 -6Z" fill="#fff" stroke="#4a2f22" stroke-width="2.2"/></g></g>
+  ${A.sparkle(120, 530, 0, 1.2)}${A.sparkle(250, 552, .7, 1)}`);
+PAPER.cards = {
+  school: () => PAPER.layers.school({ bus: true }),
+  family: () => [["sky", 0.05, PAPER.wall()], ["sway", 0.3, PAPER.tree()]],
+  land: () => [["sky", 0.05, PAPER.morning()], ["clouds", 0.12, PAPER.clouds()], ["mid", 0.3, PAPER.landMid()], ["front", 0.6, PAPER.landFront()]],
+};
