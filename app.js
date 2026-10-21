@@ -128,42 +128,26 @@ const parLayers = (layers) => layers.map(([cls, d, svg]) => `<div class="par" st
 function words(el, text, step = 0.07, base = 0.15) { el.innerHTML = text.split(" ").map((w, i) => `<span class="w" style="animation-delay:${base + i * step}s">${w}</span>`).join(" "); }
 const mapK = (W, H) => { const pw = W * 1.1, ph = H * 1.1, k = Math.max(pw / 400, ph / 800); return { k, ox: (pw - 400 * k) / 2 - W * 0.05, oy: (ph - 800 * k) / 2 - H * 0.05 }; };
 
-// ---------- главная: три мира рядом ----------
+// ---------- главная: одна сцена-диорама, выбор на одном экране ----------
 $("#defs").innerHTML = A.defs() + EXTRA_DEFS;
-$("#hubWall").innerHTML = PAPER.wall();
-const SIGN = { school: "ШКОЛА", family: "СЕМЬЯ", land: "РОДИНА" };
-const CTA = { school: "▶ Смотреть: Школа", family: "▶ Смотреть: Семья", land: "▶ Смотреть: Родина" };
-let sel = 1;
-$("#worlds").innerHTML = SECS.map((id, i) => `<div class="world" data-sec="${id}" style="--i:${i}"><div class="wcard">${parLayers(PAPER.cards[id]())}<div class="sign">${SIGN[id]}</div><div class="doneMark">✓</div></div></div>`).join("");
-function layoutWorlds() {
-  $("#worlds").style.setProperty("--sel", sel);
-  document.querySelectorAll(".world").forEach((w, i) => w.classList.toggle("sel", i === sel));
-  $("#cta").textContent = CTA[SECS[sel]];
-  $("#dotsW").innerHTML = SECS.map((_, i) => `<i class="${i === sel ? "on" : ""}"></i>`).join("");
-  $("#prevW").style.visibility = sel === 0 ? "hidden" : "visible"; $("#nextW").style.visibility = sel === SECS.length - 1 ? "hidden" : "visible";
+const hl = (cls, d, svg) => `<div class="hl ${cls}"><div class="par" style="--d:${d}"><div class="lay">${svg}</div></div></div>`;
+$("#hubLayers").innerHTML = hl("wall", 0.08, PAPER.wall()) + hl("tree", 0.3, PAPER.tree()) + hl("boxes", 0.45, PAPER.boxes()) + hl("fx", 0.6, PAPER.hubFx());
+const SPOTS = [
+  { sec: "family", rect: [40, 96, 320, 450], chip: [200, 130], label: "Семья ❤️" },
+  { sec: "school", rect: [8, 476, 160, 280], chip: [88, 506], label: "Школа 📚" },
+  { sec: "land", rect: [232, 476, 160, 280], chip: [312, 506], label: "Родина 🇰🇬" },
+];
+function placeSpots() {
+  const W = stage.clientWidth, H = stage.clientHeight, { k, ox, oy } = mapK(W, H);
+  $("#spots").innerHTML = SPOTS.map((s) => {
+    const [x, y, w, h] = s.rect, l = ox + x * k, t = oy + y * k, pw = w * k, ph = h * k;
+    const cx = ((s.chip[0] - x) / w) * 100, cy = ((s.chip[1] - y) / h) * 100;
+    return `<button class="spot${P.done.includes(s.sec) ? " done" : ""}" data-sec="${s.sec}" aria-label="Открыть: ${C.sections[s.sec].title}" style="left:${l.toFixed(0)}px;top:${t.toFixed(0)}px;width:${pw.toFixed(0)}px;height:${ph.toFixed(0)}px"><span class="lbl" style="left:${cx.toFixed(1)}%;top:${cy.toFixed(1)}%">${s.label}</span></button>`;
+  }).join("");
 }
-function pick(i) { sel = Math.max(0, Math.min(SECS.length - 1, i)); layoutWorlds(); }
-// свайп влево/вправо; касание по боковому миру выбирает его, по центральному открывает
-let sx = null, sdx = 0;
-$("#worlds").addEventListener("pointerdown", (e) => { sx = e.clientX; sdx = 0; });
-$("#worlds").addEventListener("pointermove", (e) => { if (sx !== null) sdx = e.clientX - sx; });
-$("#worlds").addEventListener("pointerup", (e) => {
-  if (sx === null) return; const dx = sdx; sx = null;
-  if (Math.abs(dx) > 40) return pick(sel + (dx < 0 ? 1 : -1));
-  const w = e.target.closest(".world"); if (!w) return;
-  const i = SECS.indexOf(w.dataset.sec);
-  i === sel ? openSection(w.dataset.sec) : pick(i);
-});
-$("#worlds").addEventListener("pointercancel", () => { sx = null; });
-$("#prevW").addEventListener("click", () => pick(sel - 1));
-$("#nextW").addEventListener("click", () => pick(sel + 1));
-$("#cta").addEventListener("click", () => openSection(SECS[sel]));
-document.addEventListener("keydown", (e) => { if (stage.classList.contains("story")) return; if (e.key === "ArrowLeft") pick(sel - 1); else if (e.key === "ArrowRight") pick(sel + 1); else if (e.key === "Enter") openSection(SECS[sel]); });
-function renderMedals() {
-  $("#medalrow").innerHTML = SECS.map((id) => `<span class="mdot ${P.done.includes(id) ? "on" : ""}" title="${C.sections[id].medal.name}">${C.sections[id].medal.icon}</span>`).join("");
-  document.querySelectorAll(".world").forEach((w) => w.classList.toggle("done", P.done.includes(w.dataset.sec)));
-}
-addEventListener("resize", fitFx);
+const renderMedals = placeSpots; // отметка ✓ на пройденных местах
+$("#spots").addEventListener("click", (e) => { const b = e.target.closest(".spot"); if (b) openSection(b.dataset.sec); });
+addEventListener("resize", () => { fitFx(); placeSpots(); });
 
 // ---------- рассказ ----------
 function buildScene(s) {
@@ -212,19 +196,10 @@ function leaveStory() {
   track("home"); renderMedals();
 }
 function endSection() {
-  running = false; voice.pause(); setFx(null);
-  const m = C.sections[sec].medal;
-  $("#mArt").innerHTML = A.medal(m);
-  $("#mName").textContent = `Медаль «${m.name}»`;
-  $("#mText").textContent = `Ты прошёл раздел «${C.sections[sec].title}»!`;
-  $("#medal").classList.add("show"); setFx("confetti");
-}
-$("#mOk").addEventListener("click", () => {
-  $("#medal").classList.remove("show");
   if (sec && !P.done.includes(sec)) { P.done.push(sec); save(); }
   leaveStory();
   if (P.done.length === SECS.length) setTimeout(showFinale, 1000);
-});
+}
 $("#home").addEventListener("click", leaveStory);
 
 // нажатия: справа дальше, слева назад, удержание — пауза
@@ -267,4 +242,4 @@ $("#enter").addEventListener("click", () => {
   setTimeout(() => playVoice("hello"), 600);
   if (!volOK) Object.keys(C.songs).forEach((k, i) => setTimeout(() => getUrl(k), 6000 + i * 6000)); // iPhone: готовим песни по одной
 });
-fitFx(); layoutWorlds(); renderMedals(); requestAnimationFrame(frame);
+fitFx(); renderMedals(); requestAnimationFrame(frame);

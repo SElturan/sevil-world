@@ -164,3 +164,44 @@ PAPER.cards = {
   family: () => [["sky", 0.05, PAPER.wall()], ["sway", 0.3, PAPER.tree()]],
   land: () => [["sky", 0.05, PAPER.morning()], ["clouds", 0.12, PAPER.clouds()], ["mid", 0.3, PAPER.landMid()], ["front", 0.6, PAPER.landFront()]],
 };
+
+// ================= Главная как на диораме: далёкая комната сзади, в центре древо, слева школа, справа Родина =================
+const komuz = (x, y, r = 0) => `<g transform="translate(${x},${y}) rotate(${r})"><rect x="-3" y="-44" width="6" height="46" rx="3" fill="#7a4a2a" stroke="#4a2f22" stroke-width="1.6"/><path d="M0 40 C-20 40 -22 12 -9 0 L9 0 C22 12 20 40 0 40Z" fill="#d49a52" stroke="#4a2f22" stroke-width="2"/><circle cx="0" cy="18" r="5" fill="#5b3a29"/></g>`;
+const pot = (x, y, c) => `<g transform="translate(${x},${y})"><path d="M-10 0 Q-14 -16 -6 -22 L6 -22 Q14 -16 10 0Z" fill="${c}" stroke="#4a2f22" stroke-width="2"/><rect x="-7" y="-26" width="14" height="5" rx="2" fill="${c}" stroke="#4a2f22" stroke-width="1.6"/></g>`;
+PAPER.wall = () => L(`<rect x="-60" y="-60" width="520" height="940" fill="url(#paper)"/>
+  <rect x="0" y="0" width="400" height="18" fill="url(#orn)"/><rect x="0" y="18" width="400" height="4" fill="#8e2f3a"/>
+  <rect x="88" y="38" width="224" height="150" rx="4" fill="#2f6f5a" stroke="#9b6a35" stroke-width="8"/>
+  <g stroke="#fff" stroke-width="2.4" opacity=".55" stroke-linecap="round" fill="none"><path d="M106 70 H200 M106 92 H250 M106 114 H170"/><circle cx="270" cy="72" r="10"/><path d="M262 130 l14 -18 l14 18Z"/></g>
+  <rect x="0" y="98" width="52" height="250" fill="#c18a52" stroke="#8a5a2c" stroke-width="4"/>
+  <path d="M0 168 H52 M0 238 H52 M0 308 H52" stroke="#8a5a2c" stroke-width="5"/>
+  ${komuz(16, 160, -8)}${komuz(40, 160, 6)}${pot(18, 232, "#e8590c")}${pot(40, 232, "#2b93e6")}<g transform="translate(6,300)"><rect width="10" height="28" rx="2" fill="#d62839" stroke="#4a2f22" stroke-width="1.5"/><rect x="12" y="4" width="10" height="24" rx="2" fill="#2f9e5b" stroke="#4a2f22" stroke-width="1.5"/><rect x="24" width="10" height="28" rx="2" fill="#2b7de9" stroke="#4a2f22" stroke-width="1.5"/></g>
+  <g transform="translate(346,44)"><rect width="62" height="260" rx="4" fill="#8e2f3a" stroke="#5a1d25" stroke-width="3"/><rect x="6" y="6" width="50" height="248" fill="url(#orn2)" opacity=".9"/><rect x="16" y="50" width="30" height="150" fill="#ffd23f" opacity=".85"/><circle cx="31" cy="125" r="22" fill="#d62839"/><circle cx="31" cy="125" r="10" fill="#fff3d9"/></g>
+  <rect x="-10" y="770" width="420" height="40" fill="url(#wood)"/><rect x="26" y="778" width="348" height="12" fill="url(#orn)"/><path d="M-10 772 H410" stroke="#5e3a1a" stroke-width="2"/>`);
+
+PAPER.treeArt0 = PAPER.treeArt;
+PAPER.tree = () => L(`<g transform="translate(200,252) scale(.86) translate(-200,-262)">${PAPER.treeArt0()}</g>`);
+
+const POLY = (x0, x1, top, base) => `${x0},${base} ${x0},${top + 70} ${(x0 + x1) / 2},${top} ${x1},${top + 70} ${x1},${base}`;
+const boxFrame2 = (x0, x1, top, base, label) => `<polygon points="${POLY(x0, x1, top, base)}" fill="none" stroke="#b9824a" stroke-width="9" stroke-linejoin="round"/><polygon points="${POLY(x0 + 4, x1 - 4, top + 4, base)}" fill="none" stroke="#8a5a2c" stroke-width="2" opacity=".7" stroke-linejoin="round"/>
+  <rect x="${x0 - 6}" y="${base - 18}" width="${x1 - x0 + 12}" height="26" rx="6" fill="url(#wood)" stroke="#5e3a1a" stroke-width="3"/>
+  <g transform="translate(${(x0 + x1) / 2},${base - 4})"><rect x="-40" y="-13" width="80" height="22" rx="6" fill="#fff3d9" stroke="#8a5a2c" stroke-width="2.4"/><text y="3" text-anchor="middle" font-family="Montserrat, Nunito, sans-serif" font-weight="900" font-size="13" fill="#4a2f22">${label}</text></g>`;
+PAPER.boxSchool = () => `<g><clipPath id="bs"><polygon points="${POLY(8, 168, 476, 756)}"/></clipPath><g clip-path="url(#bs)">
+  <rect x="0" y="470" width="180" height="300" fill="url(#morning)"/><circle cx="142" cy="550" r="11" fill="#ffe27a"/>
+  <path d="M0 704 Q80 690 180 702 V770 H0Z" fill="#58c878" stroke="#2f8f4e" stroke-width="1.5"/>
+  <g transform="translate(88,716) scale(.66)">${A.school(0, 0, 1, false)}</g>
+  ${PERSON.make("sevil", { x: 52, y: 748, s: .52 })}${PERSON.make("teacher", { x: 126, y: 750, s: .46 })}${PERSON.make("pupilB", { x: 96, y: 752, s: .4 })}${PERSON.make("pupilG", { x: 150, y: 752, s: .38 })}</g>${boxFrame2(8, 168, 476, 756, "ШКОЛА")}</g>`;
+PAPER.boxLand = () => `<g><clipPath id="bl"><polygon points="${POLY(232, 392, 476, 756)}"/></clipPath><g clip-path="url(#bl)">
+  <rect x="226" y="470" width="176" height="300" fill="url(#morning)"/><circle cx="368" cy="550" r="11" fill="#ffe27a"/>
+  <g transform="translate(210,450) scale(.57)">${A.mountains(0)}</g>
+  <ellipse cx="312" cy="722" rx="52" ry="9" fill="#4cc9f0" stroke="#2b93e6" stroke-width="1.5"/>
+  <path d="M226 724 Q312 706 402 720 V770 H226Z" fill="#58c878" stroke="#2f8f4e" stroke-width="1.5"/>
+  <g transform="translate(352,748) scale(.34)">${A.yurt(0, 0, 1, false)}</g><g transform="translate(282,754) scale(.24)">${A.yurt(0, 0, 1, false)}</g>
+  ${PERSON.make("sevil", { x: 318, y: 756, s: .46 })}</g>${boxFrame2(232, 392, 476, 756, "РОДИНА")}</g>`;
+PAPER.banner = () => `<g transform="translate(200,742) scale(.78) translate(-200,-606)"><path d="M30 578 Q200 560 370 578 L358 606 L372 634 Q200 618 28 634 L42 606Z" fill="#fff3d9" stroke="#8a5a2c" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M30 578 L14 584 L26 606 L14 628 L28 634Z M370 578 L386 584 L374 606 L386 628 L372 634Z" fill="#e6c88e" stroke="#8a5a2c" stroke-width="2.4" stroke-linejoin="round"/>
+  <text x="200" y="601" text-anchor="middle" font-family="Montserrat, Nunito, sans-serif" font-weight="900" font-size="18" fill="#4a2f22">МОЙ БОЛЬШОЙ МИР</text>
+  <text x="200" y="620" text-anchor="middle" font-family="Montserrat, Nunito, sans-serif" font-weight="800" font-size="12" fill="#8a5a2c" letter-spacing="1.5">СЕМЬЯ · ШКОЛА · РОДИНА</text></g>`;
+PAPER.hubFx = () => L(`<g class="hubFlag">${A.schoolFlag(88, 716, .66)}</g><g transform="translate(262,744)"><g class="flagS">${A.flag(0, 0, .3)}</g></g>
+  <g transform="translate(330,560)"><g class="glide">${A.eagle(0, 0, .26)}</g></g>${A.smoke(352, 748, .34)}
+  ${A.sparkle(70, 130, 0, 1.2)}${A.sparkle(340, 150, .7, 1)}${A.sparkle(200, 60, 1.3, 1.1)}`);
+PAPER.boxes = () => L(PAPER.boxSchool() + PAPER.boxLand() + PAPER.banner());
