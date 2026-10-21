@@ -141,3 +141,13 @@ svg { display: block; }
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
 }
 @media (min-width: 700px) { #app { border-radius: 32px; height: min(100dvh, 900px); margin: auto; box-shadow: 0 30px 80px rgba(0, 0, 0, .5); } }
+
+/* портрет Севиль */
+#start { gap: 14px; }
+.portrait { height: clamp(140px, 30dvh, 270px); width: auto; border-radius: 26px; border: 4px solid #fff; box-shadow: 0 10px 0 rgba(0, 0, 0, .18), 0 18px 34px rgba(0, 0, 0, .35); animation: floaty 3.2s ease-in-out infinite; }
+#start p { position: relative; max-width: 92%; padding: 10px 16px; font-size: 17px; line-height: 1.3; color: var(--ink); background: #fff; border-radius: 20px; box-shadow: 0 4px 0 rgba(0, 0, 0, .15); }
+#start p::before { content: ""; position: absolute; top: -9px; left: 50%; margin-left: -9px; border: 9px solid transparent; border-top: 0; border-bottom-color: #fff; }
+.face { width: 104px; height: 104px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 8px 0 rgba(0, 0, 0, .18); animation: floaty 3s ease-in-out infinite; }
+.card .av { position: absolute; top: -34px; right: 16px; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 5px 12px rgba(0, 0, 0, .3); background: #fff; }
+.card h2 { padding-right: 56px; }
+@media (max-height: 640px) { .portrait { height: 120px; } #start p { font-size: 15px; } }

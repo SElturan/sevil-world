@@ -82,10 +82,14 @@ A.kid = (o) => {
   }[kind];
   const big = kind === "mom" || kind === "dad";
   let hair = "", hat = "";
-  if (kind === "girl" || kind === "mom" || kind === "pupilG") {
+  if (kind === "girl" || kind === "pupilG") {
+    // Севиль: короткое каштановое каре
+    hair = `<path d="M-15 -10 Q-17 -34 0 -34 Q17 -34 15 -10 L15 0 Q11 -2 9 -12 Q0 -19 -9 -12 Q-11 -2 -15 0Z" fill="#6b4630" ${S(1.8)}/>`;
+    if (kind === "girl") hat = `<path d="M-14 -21 Q-13 -39 0 -39 Q13 -39 14 -21Z" fill="#ffe066" ${S(2)}/><path d="M-14 -21 Q4 -17 20 -21 Q12 -26 0 -24Z" fill="#f5c933" ${S(1.8)}/><path d="M-3 -33 l-5 -3 l1 6Z M-3 -33 l5 -3 l-1 6Z" fill="#fff3a0" ${S(1.2)}/>`;
+  } else if (kind === "mom") {
     hair = `<path d="M-14 -14 Q-14 -32 0 -32 Q14 -32 14 -14 Q8 -24 0 -24 Q-8 -24 -14 -14Z" fill="${cfg.hair}" ${S(1.8)}/>
       <path d="M-14 -14 Q-20 -2 -15 8" fill="none" stroke="${cfg.hair}" stroke-width="6" stroke-linecap="round"/><path d="M14 -14 Q20 -2 15 8" fill="none" stroke="${cfg.hair}" stroke-width="6" stroke-linecap="round"/>
-      <circle cx="-15" cy="8" r="3.6" fill="${kind !== "mom" ? "#ff5d73" : "#ffd23f"}"/><circle cx="15" cy="8" r="3.6" fill="${kind !== "mom" ? "#ff5d73" : "#ffd23f"}"/>`;
+      <circle cx="-15" cy="8" r="3.6" fill="#ffd23f"/><circle cx="15" cy="8" r="3.6" fill="#ffd23f"/>`;
   } else {
     hair = `<path d="M-14 -14 Q-15 -32 0 -32 Q15 -32 14 -14 Q6 -22 -2 -20 Q-9 -20 -14 -14Z" fill="${cfg.hair}" ${S(1.8)}/>`;
   }
@@ -94,6 +98,9 @@ A.kid = (o) => {
     hair = "";
   }
   if (kind === "mom") hat = `<path d="M-14 -22 Q0 -38 14 -22 Q0 -28 -14 -22Z" fill="#ffd23f" ${S(1.6)}/>`;
+  // Севиль в белой футболке «Баластан» и юбке-русалке
+  const teeSkirt = `<path d="M-10 2 Q0 -1 10 2 L12 15 L-12 15Z" fill="#fff" ${S(2)}/><circle cx="0" cy="9" r="3" fill="#ff7a1a"/>
+    <path d="M-13 14 L13 14 L17 30 Q0 35 -17 30Z" fill="#b98cff" ${S(2)}/><path d="M-9 20 Q0 24 9 20 M-11 26 Q0 30 11 26" fill="none" stroke="#7fe0f5" stroke-width="2.2" stroke-linecap="round"/>`;
   const body = cfg.dress
     ? `<path d="M-14 28 L-9 4 Q0 0 9 4 L14 28 Q0 33 -14 28Z" fill="${cfg.top}" ${S(2)}/><path d="M-12 22 Q0 27 12 22" fill="none" stroke="#fff3d6" stroke-width="3" stroke-dasharray="2 4" stroke-linecap="round"/>`
     : `<rect x="-10" y="2" width="20" height="27" rx="8" fill="${cfg.top}" ${S(2)}/>`;
@@ -101,7 +108,7 @@ A.kid = (o) => {
   <g transform="translate(0,-43)"><g class="${cls}" style="animation-delay:${delay}s">
     <rect x="-8" y="26" width="6" height="15" rx="3" fill="${cfg.legs}" ${S(1.8)}/><rect x="2" y="26" width="6" height="15" rx="3" fill="${cfg.legs}" ${S(1.8)}/>
     <ellipse cx="-5" cy="42" rx="6.5" ry="3.6" fill="#3a2a22"/><ellipse cx="5" cy="42" rx="6.5" ry="3.6" fill="#3a2a22"/>
-    ${body}
+    ${kind === "girl" ? teeSkirt : body}
     <path class="armL" d="M-10 8 Q-19 14 -16 22" fill="none" stroke="${skin}" stroke-width="5" stroke-linecap="round"/><path class="armR" d="M10 8 Q19 14 16 22" fill="none" stroke="${skin}" stroke-width="5" stroke-linecap="round"/>
     <circle cx="0" cy="-12" r="14" fill="${skin}" ${S(2)}/>
     ${hair}${hat}

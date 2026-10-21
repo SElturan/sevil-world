@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
@@ -25,6 +25,7 @@
     <div id="stage"></div>
     <div class="topbar"><button class="back" id="back" aria-label="Назад в мой мир">←</button><div class="dots" id="dots"></div></div>
     <div class="card" id="card">
+      <img class="av" src="img/sevil-face.jpg" alt="">
       <h2><span class="ic" id="ic"></span><span id="ct"></span></h2>
       <p id="cp"></p>
       <div class="nav"><button class="btn prev" id="prev" aria-label="Назад">◀</button><button class="btn next" id="next">Дальше ▶</button></div>
@@ -35,23 +36,23 @@
   <canvas id="confetti"></canvas>
 
   <div class="overlay hide" id="finale" role="dialog" aria-label="Финал">
-    <div class="badge">🌟</div>
+    <img class="face" src="img/sevil-face.jpg" alt="Севиль">
     <h1 id="fTitle"></h1>
     <p id="fSub"></p>
     <button class="go" id="again">Ещё раз ↺</button>
   </div>
 
   <div class="overlay" id="start">
-    <div class="badge">🏔️</div>
     <h1 id="sTitle"></h1>
+    <img class="portrait" src="img/sevil.jpg" alt="Севиль">
     <p id="sSub"></p>
     <button class="go" id="enter">▶ Войти в мой мир</button>
     <small>🔊 Включи звук на телефоне</small>
   </div>
 </main>
 
-<script src="content.js?v=12"></script>
-<script src="art.js?v=12"></script>
-<script src="app.js?v=12"></script>
+<script src="content.js?v=13"></script>
+<script src="art.js?v=13"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>

@@ -75,7 +75,7 @@ $("#worldArt").innerHTML = A.world();
 $("#wTitle").textContent = C.worldTitle;
 $("#wSub").textContent = `${C.name}, ${C.grade}`;
 $("#sTitle").textContent = C.worldTitle;
-$("#sSub").textContent = `Меня зовут ${C.name}. Я покажу тебе, что я люблю!`;
+$("#sSub").textContent = `Салам! Меня зовут ${C.name}. Добро пожаловать в мой мир!`;
 $("#hint").innerHTML = `<span>👆</span><span>${C.hint}</span>`;
 
 const SPOTS = {
