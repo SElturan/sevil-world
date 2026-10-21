@@ -14,7 +14,7 @@ let story = null, slide = 0, finaleShown = false;
 async function renderLoop(c) {
   const sr = 22050, step = 60 / c.bpm / 2, n = c.melody.length, loop = n * step, tail = step * 3;
   const ctx = new OfflineAudioContext(1, Math.ceil(sr * (loop + tail)), sr);
-  const master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination);
+  const master = ctx.createGain(); master.gain.value = 0.3; master.connect(ctx.destination);
   const f = (m) => 440 * Math.pow(2, (m - 69) / 12);
   function pluck(m, t, d, v, type) {
     const o = ctx.createOscillator(), g = ctx.createGain(), fl = ctx.createBiquadFilter();
@@ -42,10 +42,26 @@ async function renderLoop(c) {
   for (let i = 0; i < L; i++) w.setInt16(44 + i * 2, Math.max(-1, Math.min(1, out[i])) * 32767, true);
   return URL.createObjectURL(new Blob([w], { type: "audio/wav" }));
 }
+const BG = 0.28; // громкость песен как фона
+async function bakedSong(path) {
+  const raw = await (await fetch(path)).arrayBuffer();
+  const ac = await new OfflineAudioContext(2, 1, 44100).decodeAudioData(raw);
+  const ch = ac.numberOfChannels, L = ac.length, sr = ac.sampleRate;
+  const w = new DataView(new ArrayBuffer(44 + L * ch * 2));
+  const str = (o, t) => [...t].forEach((c, k) => w.setUint8(o + k, c.charCodeAt(0)));
+  str(0, "RIFF"); w.setUint32(4, 36 + L * ch * 2, true); str(8, "WAVEfmt ");
+  w.setUint32(16, 16, true); w.setUint16(20, 1, true); w.setUint16(22, ch, true);
+  w.setUint32(24, sr, true); w.setUint32(28, sr * ch * 2, true); w.setUint16(32, ch * 2, true); w.setUint16(34, 16, true);
+  str(36, "data"); w.setUint32(40, L * ch * 2, true);
+  const data = Array.from({ length: ch }, (_, c) => ac.getChannelData(c));
+  let o = 44;
+  for (let i = 0; i < L; i++) for (let c = 0; c < ch; c++, o += 2) w.setInt16(o, Math.max(-1, Math.min(1, data[c][i] * BG)) * 32767, true);
+  return URL.createObjectURL(new Blob([w], { type: "audio/wav" }));
+}
 const audio = new Audio();
 audio.loop = true; audio.setAttribute("playsinline", "");
 const urls = {};
-const getUrl = (k) => (urls[k] = urls[k] || (C.songs && C.songs[k] ? Promise.resolve(C.songs[k]) : renderLoop(C.music[k])));
+const getUrl = (k) => (urls[k] = urls[k] || (C.songs && C.songs[k] ? bakedSong(C.songs[k]).catch(() => C.songs[k]) : renderLoop(C.music[k])));
 let curTrack = null;
 const fade = (to, ms) => new Promise((res) => {
   const from = audio.volume, t0 = Date.now();
@@ -61,10 +77,18 @@ async function track(key) {
   await fade(0, 250);
   if (curTrack !== key) return;
   try { audio.src = await getUrl(key); await audio.play(); } catch (e) { console.warn(e); }
-  if (curTrack === key) fade(0.9, 500);
+  if (curTrack === key) fade(1, 500);
+}
+const voice = new Audio();
+voice.setAttribute("playsinline", "");
+function playVoice() {
+  voice.pause();
+  if (!story) return;
+  voice.src = `voice/${story}-${slide + 1}.mp3?v=${C.voiceVersion || 1}`;
+  voice.play().catch(() => {}); // файла ещё нет или звук запрещён: молчим
 }
 $("#mute").addEventListener("click", () => {
-  audio.muted = !audio.muted;
+  audio.muted = !audio.muted; voice.muted = audio.muted;
   $("#mute").textContent = audio.muted ? "🔇" : "🔊";
   $("#mute").setAttribute("aria-label", audio.muted ? "Включить звук" : "Выключить звук");
 });
@@ -124,6 +148,7 @@ function openStory(id, push = true) {
 function closeStory() {
   if (!story) return;
   const id = story; story = null;
+  voice.pause();
   visited.add(id); saveVisited();
   storyEl.classList.remove("open"); storyEl.classList.add("closing");
   $("#world").classList.remove("zoom");
@@ -150,6 +175,7 @@ function renderSlide(animate = true) {
   const last = slide === n - 1;
   $("#next").textContent = last ? "В мой мир 🌍" : "Дальше ▶";
   $("#next").classList.toggle("last", last);
+  playVoice();
 }
 const go = (d) => {
   if (!story) return;
@@ -209,7 +235,8 @@ function confetti() {
 refreshWorld();
 const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 $("#enter").addEventListener("click", () => {
-  audio.src = SILENT; audio.play().catch(() => {}); // «разблокируем» звук в момент нажатия
+  audio.src = SILENT; audio.play().catch(() => {});
+  voice.src = SILENT; voice.play().catch(() => {}); // «разблокируем» звук в момент нажатия
   $("#start").classList.add("hide");
   track("world");
   IDS.forEach((k) => getUrl(k)); // готовим остальную музыку заранее

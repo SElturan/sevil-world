@@ -4,6 +4,7 @@ const CONTENT = {
   grade: "3 класс",
   worldTitle: "Мой большой мир",
   hint: "Нажми на школу, юрту или флаг",
+  voiceVersion: 1, // увеличьте число, когда замените голосовые файлы
   finale: "Спасибо, что заглянул в мой мир!",
   // настоящие песни для историй; для «мира» играет встроенная мелодия
   songs: { school: "music/school.mp3", family: "music/family.m4a", land: "music/land.m4a" },
