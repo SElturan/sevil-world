@@ -1,6 +1,6 @@
 :root {
   --ink: #3b2a20; --cream: #fff8e8; --coral: #ff5d3b; --coral-d: #d93f20; --sun: #ffd23f; --sun-d: #d9a400;
-  --teal: #26a69a; --card: rgba(255, 252, 244, .94);
+  --teal: #26a69a; --card: rgba(255, 252, 244, .98);
   --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
   --font: "Nunito", "Trebuchet MS", system-ui, sans-serif;
 }
@@ -13,12 +13,16 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 #app { position: relative; height: 100dvh; width: min(100vw, 50dvh); overflow: hidden; background: #8fd6ff; }
 .view { position: absolute; inset: 0; }
 svg { display: block; }
-#worldSvg, .stage { position: absolute; inset: 0; width: 100%; height: 100%; }
+.layers, .stage { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stage { pointer-events: none; }
+#worldArt .layers { transform-origin: var(--ox, 50%) var(--oy, 50%); transition: transform 1.1s cubic-bezier(.6, 0, .3, 1); }
+#world.zoom .layers { transform: translate(var(--zx, 0), var(--zy, 0)) scale(2.6); }
+#world.intro .layers { animation: intro 2.2s cubic-bezier(.2, .8, .2, 1) both; }
+#world.off { visibility: hidden; }
+#stage .layers { transform-origin: 0 0; transition: transform 1.2s cubic-bezier(.6, 0, .25, 1); }
+.spot, .mk { pointer-events: all; }
 
 /* ---------- мир ---------- */
-#wcam { transform-origin: 50% 50%; transition: transform 1.1s cubic-bezier(.6, 0, .3, 1); }
-#world.zoom #wcam { transform: translate(var(--zx, 0), var(--zy, 0)) scale(2.6); }
-#world.intro #wcam { animation: intro 2.2s cubic-bezier(.2, .8, .2, 1) both; }
 @keyframes intro { from { transform: scale(1.25) translateY(-3%); } to { transform: none; } }
 
 .title { position: absolute; top: calc(var(--safe-t) + 72px); left: 0; right: 0; text-align: center; pointer-events: none; z-index: 3; }
@@ -52,9 +56,9 @@ svg { display: block; }
 #story { z-index: 10; clip-path: circle(0 at 50% 50%); transition: clip-path .75s cubic-bezier(.6, 0, .2, 1); visibility: hidden; background: #8fd6ff; }
 #story.open { visibility: visible; clip-path: circle(150% at var(--cx, 50%) var(--cy, 50%)); }
 #story.closing { visibility: visible; clip-path: circle(0 at var(--cx, 50%) var(--cy, 50%)); }
-.stage .cam { transition: transform 1.2s cubic-bezier(.6, 0, .25, 1); }
-[data-show] { opacity: 0; transition: opacity .6s; pointer-events: none; }
-[data-show].on { opacity: 1; }
+[data-show] { opacity: 0; visibility: hidden; transition: opacity .6s, visibility 0s .6s; pointer-events: none; }
+[data-show].on { opacity: 1; visibility: visible; transition: opacity .6s; }
+[data-show]:not(.on) * { animation-play-state: paused !important; }
 .pop.on { animation: popIn .8s cubic-bezier(.3, 1.6, .5, 1) both; transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
@@ -66,7 +70,7 @@ svg { display: block; }
 .dots i.done { background: var(--teal); }
 .dots i.cur { background: var(--coral); transform: scaleY(1.4); }
 
-.card { position: absolute; left: 12px; right: 12px; bottom: calc(var(--safe-b) + 14px); z-index: 12; padding: 18px 18px 16px; background: var(--card); border: 3px solid #fff; border-radius: 30px; box-shadow: 0 8px 0 rgba(0, 0, 0, .14), 0 18px 40px rgba(0, 0, 0, .28); backdrop-filter: blur(8px); min-height: 224px; display: flex; flex-direction: column; touch-action: pan-y; }
+.card { position: absolute; left: 12px; right: 12px; bottom: calc(var(--safe-b) + 14px); z-index: 12; padding: 18px 18px 16px; background: var(--card); border: 3px solid #fff; border-radius: 30px; box-shadow: 0 8px 0 rgba(0, 0, 0, .14), 0 18px 40px rgba(0, 0, 0, .28); min-height: 224px; display: flex; flex-direction: column; touch-action: pan-y; }
 .card h2 { font-size: clamp(24px, 7vw, 30px); font-weight: 900; line-height: 1.1; color: var(--coral-d); display: flex; align-items: center; gap: 10px; }
 .card h2 .ic { font-size: 1.1em; }
 .card p { margin-top: 8px; font-size: clamp(17px, 4.9vw, 20px); font-weight: 700; line-height: 1.38; flex: 1; }
@@ -96,11 +100,9 @@ svg { display: block; }
 #confetti { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 35; pointer-events: none; }
 
 /* ---------- анимации рисунков ---------- */
-.spin { animation: spin 40s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .drift { animation: drift 40s ease-in-out infinite alternate; }
 @keyframes drift { from { transform: translateX(-35px); } to { transform: translateX(35px); } }
-.sway { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 3s ease-in-out infinite; }
 @keyframes sway { 50% { transform: rotate(7deg); } }
 .hop { animation: hop 1.1s ease-in-out infinite; }
 @keyframes hop { 50% { transform: translateY(-9px); } }
@@ -116,7 +118,6 @@ svg { display: block; }
 .wingL, .wingR { transform-box: fill-box; }
 .wingL { transform-origin: 100% 50%; animation: flapL 1.3s ease-in-out infinite; } .wingR { transform-origin: 0 50%; animation: flapR 1.3s ease-in-out infinite; }
 @keyframes flapL { 50% { transform: rotate(-16deg) scaleY(.8); } } @keyframes flapR { 50% { transform: rotate(16deg) scaleY(.8); } }
-.shimmer { animation: shimmer 3s ease-in-out infinite; }
 @keyframes shimmer { 50% { transform: translateX(10px); opacity: .4; } }
 .heartUp { animation: heartUp 3.2s ease-in infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes heartUp { 0% { opacity: 0; transform: translateY(0) scale(.5); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-90px) scale(1.4); } }
@@ -148,8 +149,6 @@ svg { display: block; }
 #start p { position: relative; max-width: 92%; padding: 10px 16px; font-size: 17px; line-height: 1.3; color: var(--ink); background: #fff; border-radius: 20px; box-shadow: 0 4px 0 rgba(0, 0, 0, .15); }
 #start p::before { content: ""; position: absolute; top: -9px; left: 50%; margin-left: -9px; border: 9px solid transparent; border-top: 0; border-bottom-color: #fff; }
 .face { width: 104px; height: 104px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 8px 0 rgba(0, 0, 0, .18); animation: floaty 3s ease-in-out infinite; }
-.card .av { position: absolute; top: -34px; right: 16px; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 5px 12px rgba(0, 0, 0, .3); background: #fff; }
-.card h2 { padding-right: 56px; }
 @media (max-height: 640px) { .portrait { height: 120px; } #start p { font-size: 15px; } }
 
 /* ---------- стартовый экран на фоне гор ---------- */
@@ -208,3 +207,9 @@ svg { display: block; }
 #fTitle { font-size: clamp(22px, 6.6vw, 30px); font-weight: 900; line-height: 1.2; text-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
 .book { display: flex; flex-direction: column; gap: 4px; padding: 12px 20px; background: rgba(255, 255, 255, .93); color: var(--ink); border-radius: 20px; font-size: 16px; font-weight: 800; text-align: left; box-shadow: 0 6px 0 rgba(0, 0, 0, .15); }
 .book b { font-size: 18px; color: var(--coral-d); }
+
+/* Севиль-проводник стоит на карточке */
+.guide { position: absolute; left: 10px; top: -98px; width: 84px; height: 100px; overflow: visible; pointer-events: none; z-index: 2; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .12)); }
+.ball { animation: ball 1.2s ease-in-out infinite; }
+@keyframes ball { 50% { transform: translateY(-34px); } }
+.view { contain: layout paint; }

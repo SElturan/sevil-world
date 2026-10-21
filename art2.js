@@ -95,7 +95,7 @@ A.medal = (m) => {
 };
 
 // ---------- подключаем панели к сценам ----------
-const inject = (fn, extra) => () => fn().replace(/<\/g><\/svg>\s*$/, extra() + "</g></svg>");
+const inject = (fn, extra) => () => fn().replace(/<\/svg><\/div>\s*$/, extra() + "</svg></div>");
 A.sceneSchool = inject(A.sceneSchool, () => A.teacherGroup() + A.bagPanel());
 A.sceneFamily = inject(A.sceneFamily, () => A.treePanel());
 A.sceneLand = inject(A.sceneLand, () => A.musicPanel() + A.mapPanel());

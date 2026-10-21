@@ -28,7 +28,7 @@ A.sun = (x, y, r = 34) => {
     const a = (i * 9 * Math.PI) / 180, l = i % 2 ? r + 11 : r + 17;
     rays += `<line x1="${(Math.cos(a) * (r + 4)).toFixed(1)}" y1="${(Math.sin(a) * (r + 4)).toFixed(1)}" x2="${(Math.cos(a) * l).toFixed(1)}" y2="${(Math.sin(a) * l).toFixed(1)}"/>`;
   }
-  return `<g transform="translate(${x},${y})"><g class="spin" style="transform-origin:0 0"><g stroke="#ffb81c" stroke-width="3" stroke-linecap="round">${rays}</g></g>
+  return `<g transform="translate(${x},${y})"><g stroke="#ffb81c" stroke-width="3" stroke-linecap="round">${rays}</g>
   <circle r="${r}" fill="url(#sunG)" stroke="#f2a20c" stroke-width="3"/>
   <circle cx="${-r * .35}" cy="${-r * .1}" r="3.4" fill="${INK}"/><circle cx="${r * .35}" cy="${-r * .1}" r="3.4" fill="${INK}"/>
   <path d="M${-r * .4} ${r * .22} Q0 ${r * .6} ${r * .4} ${r * .22}" fill="none" ${S(2.6)}/>
@@ -130,9 +130,7 @@ A.flag = (x, y, s = 1) => {
   return `<g transform="translate(${x},${y}) scale(${s})">
   <rect x="-2.5" y="-120" width="5" height="120" rx="2.5" fill="#c9a15a" ${S(1.6)}/><circle cx="0" cy="-122" r="5" fill="#ffd23f" ${S(1.6)}/>
   <g transform="translate(2,-114)"><g class="flagw">
-    <path fill="#e8112d" ${S(2)} d="M0 0 C25 -8 50 8 100 -2 L100 64 C50 74 25 56 0 66 Z">
-      <animate attributeName="d" dur="2.2s" repeatCount="indefinite" values="M0 0 C25 -8 50 8 100 -2 L100 64 C50 74 25 56 0 66 Z;M0 0 C25 8 50 -8 100 2 L100 66 C50 56 25 74 0 64 Z;M0 0 C25 -8 50 8 100 -2 L100 64 C50 74 25 56 0 66 Z"/>
-    </path>
+    <path fill="#e8112d" ${S(2)} d="M0 0 C25 -6 50 6 100 0 L100 64 C50 70 25 58 0 66 Z"/>
     <g transform="translate(50,33)">
       <g stroke="#ffd23f" stroke-width="1.5" stroke-linecap="round">${rays}</g>
       <circle r="12.5" fill="#ffd23f"/><circle r="9.5" fill="none" stroke="#e8112d" stroke-width="1.3"/>
@@ -219,95 +217,88 @@ A.table = (x, y, s = 1) => `
   <g class="steam" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".85"><path d="M-3 -40 q-6 -8 0 -14 q6 -6 0 -14"/><path d="M5 -38 q-6 -8 0 -14 q6 -6 0 -14" style="animation-delay:.8s"/></g>
 </g>`;
 
-// ---------- общий фон для историй ----------
-A.land = (warm = false) => `
-<rect x="-50" y="-100" width="500" height="620" fill="url(#${warm ? "skyWarm" : "sky"})"/>
+// ---------- сцены из трёх слоёв ----------
+// back: небо, солнце, облака. mid: неподвижные картинки (рисуются один раз). front: всё, что движется.
+A.sky = (warm = false) => `
+<rect x="-50" y="-100" width="500" height="900" fill="url(#${warm ? "skyWarm" : "sky"})"/>
 ${A.sun(330, 100, 32)}
-${A.cloud(80, 120, 1, 36)}${A.cloud(250, 190, 0.8, 48, -10)}${A.cloud(60, 250, 0.7, 52, -20)}`;
+${A.cloud(80, 120, 1, 36)}${A.cloud(250, 190, 0.8, 48, -10)}`;
 
 A.ground = () => `
 <path d="M-50 470 Q80 430 200 465 T450 450 V900 H-50Z" fill="url(#grass)" ${S(2.5)}/>
 <path d="M-50 520 Q100 490 230 520 T450 505 V900 H-50Z" fill="url(#grass2)" ${S(2.5)}/>`;
 
+A.smoke = (x, y, s = 1) => `<g transform="translate(${x},${y}) scale(${s})"><g class="smoke"><circle cx="0" cy="-140" r="9"/><circle cx="0" cy="-140" r="9" style="animation-delay:1.4s"/><circle cx="0" cy="-140" r="9" style="animation-delay:2.8s"/></g></g>`;
+A.schoolFlag = (x, y, s) => A.flag(x, y - 184 * s, 0.32 * s);
+
+A.stack = (view, back, mid, front, id = "") => `<div class="layers"${id ? ` id="${id}"` : ""}>
+  <svg class="stage" viewBox="0 0 400 800" preserveAspectRatio="${view}" aria-hidden="true">${back}</svg>
+  <svg class="stage" viewBox="0 0 400 800" preserveAspectRatio="${view}" aria-hidden="true">${mid}</svg>
+  <svg class="stage" viewBox="0 0 400 800" preserveAspectRatio="${view}" aria-hidden="true">${front}</svg></div>`;
+
+const SEVIL = (o) => A.kid(Object.assign({ kind: "girl", cls: "hop" }, o));
+
 // ===================== МИР =====================
-A.world = () => `
-<svg id="worldSvg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Мультяшный мир: школа, юрта и горы с флагом">
-  <g id="wcam">
-  <rect x="-50" y="-100" width="500" height="650" fill="url(#sky)"/>
-  ${A.sun(338, 205, 26)}
-  ${A.cloud(70, 150, 1, 38)}${A.cloud(220, 100, 0.8, 50, -12)}${A.cloud(330, 230, 0.7, 44, -6)}
-  ${A.mountains(30)}
-  ${A.flag(176, 345, 0.95)}
-  <g>${A.eagle(78, 335, 0.5)}</g>
+A.world = () => A.stack("xMidYMid slice",
+  `${A.sky()}`.replace(A.sun(330, 100, 32), A.sun(338, 205, 26)),
+  `${A.mountains(30)}
   <path d="M-50 505 Q90 470 210 500 T450 490 V900 H-50Z" fill="url(#grass2)" ${S(2.5)}/>
   ${A.lake(205, 505, 150, 14)}
   <path d="M-50 560 Q100 520 230 555 T450 540 V900 H-50Z" fill="url(#grass)" ${S(2.5)}/>
   <path d="M170 900 Q210 760 200 640 Q196 600 215 575 L226 580 Q210 610 220 650 Q244 770 270 900Z" fill="#f0d49b" ${S(2)}/>
   ${A.tree(24, 640, 0.9)}${A.tree(380, 612, 0.8)}
-  ${A.school(100, 662, 0.82)}
-  ${A.yurt(305, 668, 0.9)}
-  <g transform="translate(0,0)"><g class="roadbus">${A.bus(0, 742, 0.42, true)}</g></g>
-  ${A.flower(40, 770, "#ff5d73", 0)}${A.flower(70, 790, "#ffd23f", .4)}${A.flower(330, 776, "#ff8fd0", .8)}${A.flower(362, 792, "#fff", 1.1)}${A.flower(150, 788, "#ff9f1c", .5)}${A.flower(258, 790, "#c77dff", .2)}
-  ${A.kid({ x: 160, y: 712, s: 0.62, kind: "pupilG", cls: "hop" })}
-  ${A.kid({ x: 248, y: 716, s: 0.56, kind: "pupilB", cls: "hop", delay: .3 })}
-  </g>
-</svg>`;
+  ${A.school(100, 662, 0.82, false)}${A.yurt(305, 668, 0.9, false)}
+  ${A.flower(40, 770, "#ff5d73")}${A.flower(70, 790, "#ffd23f")}${A.flower(330, 776, "#ff8fd0")}${A.flower(362, 792, "#fff")}${A.flower(150, 788, "#ff9f1c")}${A.flower(258, 790, "#c77dff")}`,
+  `${A.flag(176, 345, 0.95)}${A.schoolFlag(100, 662, 0.82)}${A.smoke(305, 668, 0.9)}
+  ${A.eagle(78, 335, 0.5)}
+  <g class="roadbus">${A.bus(0, 742, 0.42, true)}</g>
+  ${SEVIL({ x: 158, y: 716, s: 0.8 })}
+  ${A.kid({ x: 252, y: 718, s: 0.58, kind: "pupilB", cls: "hop", delay: .3 })}`);
 
 // ===================== ИСТОРИЯ: ШКОЛА =====================
-A.sceneSchool = () => `
-<svg class="stage" viewBox="0 0 400 800" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><g class="cam">
-  ${A.land()}
-  ${A.mountains(60)}
-  ${A.ground()}
-  ${A.tree(38, 500, 1.15)}${A.tree(372, 492, 1.0)}
-  ${A.school(200, 500, 1.28)}
+A.sceneSchool = () => A.stack("xMidYMin slice",
+  A.sky(),
+  `${A.mountains(60)}${A.ground()}${A.tree(38, 500, 1.15)}${A.tree(372, 492, 1.0)}
+  ${A.school(200, 500, 1.28, false)}
+  ${A.flower(30, 560, "#ff5d73")}${A.flower(100, 580, "#ffd23f")}${A.flower(370, 566, "#ff8fd0")}`,
+  `${A.schoolFlag(200, 500, 1.28)}
   <g data-show="bus" style="transform:translate(120px,520px)"><g class="busIn">${A.bus(0, 0, 0.95, true)}</g></g>
   <g data-show="lessons">
-    <g class="float" style="animation-delay:0s"><text x="70" y="250" font-size="34" font-weight="900" fill="#e8433f" font-family="Nunito, system-ui">А</text></g>
+    <g class="float"><text x="70" y="250" font-size="34" font-weight="900" fill="#e8433f" font-family="Nunito, system-ui">А</text></g>
     <g class="float" style="animation-delay:.6s"><text x="320" y="230" font-size="34" font-weight="900" fill="#2b93e6" font-family="Nunito, system-ui">2+3</text></g>
     <g class="float" style="animation-delay:1.1s"><text x="40" y="330" font-size="28" font-weight="900" fill="#26a69a" font-family="Nunito, system-ui">ABC</text></g>
     <g class="float" style="animation-delay:1.6s"><text x="330" y="320" font-size="30" font-weight="900" fill="#f59f00" font-family="Nunito, system-ui">π</text></g>
-    <g class="float" style="animation-delay:.3s" transform="translate(300,360)"><rect x="-22" y="-16" width="44" height="30" rx="4" fill="#dfe6f2" ${S(2)}/><rect x="-18" y="-12" width="36" height="22" rx="2" fill="#2b4a7a"/><path d="M-10 -4 l6 4 l-6 4 M0 6 h10" stroke="#7dffa1" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-28 16 H28 L24 22 H-24Z" fill="#c4cbd9" ${S(1.6)}/></g>
+    <g transform="translate(300,360)"><g class="float" style="animation-delay:.3s"><rect x="-22" y="-16" width="44" height="30" rx="4" fill="#dfe6f2" ${S(2)}/><rect x="-18" y="-12" width="36" height="22" rx="2" fill="#2b4a7a"/><path d="M-10 -4 l6 4 l-6 4 M0 6 h10" stroke="#7dffa1" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-28 16 H28 L24 22 H-24Z" fill="#c4cbd9" ${S(1.6)}/></g></g>
   </g>
-  <g data-show="friends">${A.kid({ x: 230, y: 530, s: 1.0, kind: "pupilB", cls: "hop" })}${A.kid({ x: 285, y: 534, s: 1.0, kind: "pupilG", cls: "hop", delay: .25 })}${A.kid({ x: 340, y: 530, s: 0.95, kind: "pupilB", cls: "hop", delay: .5 })}
-    <g transform="translate(262,486)"><circle r="10" fill="#ff5d73" ${S(2)}><animate attributeName="cy" values="0;-34;0" dur="1.2s" repeatCount="indefinite"/></circle></g></g>
-  ${A.kid({ x: 150, y: 540, s: 1.05, kind: "pupilG", cls: "hop", delay: .1 })}
-  <g data-show="end,kind">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 280, 1.4)}${A.heart(340, 380, 1.8)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>
-  ${A.flower(30, 560, "#ff5d73")}${A.flower(100, 580, "#ffd23f", .4)}${A.flower(370, 566, "#ff8fd0", .8)}
-</g></svg>`;
+  <g data-show="friends">${A.kid({ x: 230, y: 530, s: 1.0, kind: "pupilB", cls: "hop" })}${A.kid({ x: 340, y: 530, s: 0.95, kind: "pupilB", cls: "hop", delay: .5 })}
+    <g transform="translate(285,486)"><circle class="ball" r="10" fill="#ff5d73" ${S(2)}/></g></g>
+  <g data-show="end,kind">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 280, 1.4)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>`);
 
 // ===================== ИСТОРИЯ: СЕМЬЯ =====================
-A.sceneFamily = () => `
-<svg class="stage" viewBox="0 0 400 800" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><g class="cam">
-  ${A.land(true)}
-  ${A.mountains(70)}
-  ${A.ground()}
-  ${A.tree(36, 505, 1.1)}${A.tree(378, 498, 0.95)}
-  ${A.yurt(200, 478, 1.55)}
+A.sceneFamily = () => A.stack("xMidYMin slice",
+  A.sky(true),
+  `${A.mountains(70)}${A.ground()}${A.tree(36, 505, 1.1)}${A.tree(378, 498, 0.95)}
+  ${A.yurt(200, 478, 1.55, false)}
+  ${A.flower(30, 575, "#ff5d73")}${A.flower(112, 590, "#ffd23f")}${A.flower(290, 588, "#ff8fd0")}${A.flower(372, 570, "#fff")}`,
+  `${A.smoke(200, 478, 1.55)}
   <g data-show="traditions" class="pop">${A.table(200, 540, 1.1)}</g>
-  <g data-show="intro,learn,traditions,kind,why,quiz,end" class="pop">${A.kid({ x: 82, y: 520, s: 1.05, kind: "dad", cls: "hop" })}</g>
-  <g data-show="intro,learn,traditions,kind,why,quiz,end" class="pop" style="animation-delay:.3s">${A.kid({ x: 318, y: 520, s: 1.05, kind: "mom", cls: "hop", delay: .2 })}</g>
-  <g data-show="intro,learn,traditions,kind,why,quiz,end" class="pop" style="animation-delay:.6s">${A.kid({ x: 200, y: 530, s: 1.15, kind: "girl", cls: "hop", delay: .4 })}</g>
+  <g data-show="intro,learn,traditions,kind,why,end" class="pop">${A.kid({ x: 82, y: 520, s: 1.05, kind: "dad", cls: "hop" })}</g>
+  <g data-show="intro,learn,traditions,kind,why,end" class="pop" style="animation-delay:.3s">${A.kid({ x: 318, y: 520, s: 1.05, kind: "mom", cls: "hop", delay: .2 })}</g>
+  ${SEVIL({ x: 200, y: 530, s: 1.15, delay: .4 })}
   <g data-show="learn,end,why,kind">${A.heart(110, 380, 0)}${A.heart(290, 380, .6)}${A.heart(200, 350, 1.2)}${A.heart(60, 430, 1.8, "#ff8fa3", .8)}${A.heart(340, 430, 2.2, "#ff8fa3", .8)}</g>
-  <g data-show="end,quiz">${A.sparkle(165, 195, 0, 1.3)}${A.sparkle(235, 190, .5, 1.1)}${A.sparkle(200, 170, 1, 1.4)}${A.sparkle(130, 230, 1.4, 1)}${A.sparkle(272, 228, .9, 1)}</g>
-  ${A.flower(30, 575, "#ff5d73")}${A.flower(112, 590, "#ffd23f", .4)}${A.flower(290, 588, "#ff8fd0", .8)}${A.flower(372, 570, "#fff", 1.1)}
-</g></svg>`;
+  <g data-show="end">${A.sparkle(165, 195, 0, 1.3)}${A.sparkle(235, 190, .5, 1.1)}${A.sparkle(200, 170, 1, 1.4)}</g>`);
 
 // ===================== ИСТОРИЯ: РОДИНА =====================
-A.sceneLand = () => `
-<svg class="stage" viewBox="0 0 400 800" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><g class="cam">
-  ${A.land()}
-  ${A.mountains(0)}
-  ${A.eagle(300, 230, 0.8)}
-  <g data-show="mountains">${A.eagle(120, 200, 0.6)}</g>
+A.sceneLand = () => A.stack("xMidYMin slice",
+  A.sky(),
+  `${A.mountains(0)}
   <path d="M-50 470 Q80 440 200 468 T450 456 V900 H-50Z" fill="url(#grass2)" ${S(2.5)}/>
   ${A.lake(200, 472, 190, 20)}
-  <g data-show="lake"><g transform="translate(275,470)"><g class="boat"><path d="M-22 0 H22 L16 10 H-16Z" fill="#e8433f" ${S(2)}/><path d="M0 0 V-30 L18 -6Z" fill="#fff" ${S(2)}/></g></g>${A.sparkle(215, 462, 0, 1.2)}${A.sparkle(330, 478, .6, 1)}${A.sparkle(235, 484, 1.1, 1)}</g>
   <path d="M-50 520 Q100 490 230 520 T450 505 V900 H-50Z" fill="url(#grass)" ${S(2.5)}/>
-  ${A.yurt(318, 556, 0.5)}${A.yurt(262, 572, 0.38)}
+  ${A.yurt(318, 556, 0.5, false)}${A.yurt(262, 572, 0.38, false)}${A.tree(372, 540, 0.8)}
+  ${A.flower(30, 585, "#ff5d73")}${A.flower(130, 598, "#ffd23f")}${A.flower(270, 600, "#ff8fd0")}${A.flower(366, 586, "#fff")}`,
+  `${A.eagle(300, 230, 0.8)}
+  <g data-show="mountains">${A.eagle(120, 200, 0.6)}</g>
+  <g data-show="lake"><g transform="translate(275,470)"><g class="boat"><path d="M-22 0 H22 L16 10 H-16Z" fill="#e8433f" ${S(2)}/><path d="M0 0 V-30 L18 -6Z" fill="#fff" ${S(2)}/></g></g>${A.sparkle(215, 462, 0, 1.2)}${A.sparkle(330, 478, .6, 1)}${A.sparkle(235, 484, 1.1, 1)}</g>
   ${A.flag(70, 560, 1.15)}
-  ${A.tree(372, 540, 0.8)}
-  <g data-show="end,quiz">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 400, 1.4)}${A.heart(340, 400, 1.8)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>
-  ${A.kid({ x: 200, y: 560, s: 1.0, kind: "girl", cls: "hop" })}
-  ${A.flower(30, 585, "#ff5d73")}${A.flower(130, 598, "#ffd23f", .4)}${A.flower(270, 600, "#ff8fd0", .8)}${A.flower(366, 586, "#fff", 1.1)}
-</g></svg>`;
+  <g data-show="end">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 400, 1.4)}${A.heart(340, 400, 1.8)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>`);

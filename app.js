@@ -55,8 +55,9 @@ async function bakedSong(path) {
 }
 const audio = new Audio();
 audio.loop = true; audio.setAttribute("playsinline", "");
+const volOK = (() => { const a = new Audio(); a.volume = 0.5; return a.volume === 0.5; })();
 const urls = {};
-const getUrl = (k) => (urls[k] = urls[k] || (C.songs && C.songs[k] ? bakedSong(C.songs[k]).catch(() => C.songs[k]) : renderLoop(C.music[k])));
+const getUrl = (k) => (urls[k] = urls[k] || (C.songs && C.songs[k] ? (volOK ? Promise.resolve(C.songs[k]) : bakedSong(C.songs[k]).catch(() => C.songs[k])) : renderLoop(C.music[k])));
 let curTrack = null;
 const fade = (to, ms) => new Promise((res) => {
   const from = audio.volume, t0 = Date.now();
@@ -72,7 +73,7 @@ async function track(key) {
   await fade(0, 250);
   if (curTrack !== key) return;
   try { audio.src = await getUrl(key); await audio.play(); } catch (e) { console.warn(e); }
-  if (curTrack === key) fade(1, 500);
+  if (curTrack === key) fade(C.songs && C.songs[key] && volOK ? BG : 1, 500);
 }
 // Голос Севиль: файлы voice/<история>-<номер слайда>.mp3 и voice/hello.mp3. Если файла нет, молчим.
 const voice = new Audio();
@@ -101,11 +102,7 @@ function burst(x, y, emoji = "❤️") {
     $("#app").appendChild(s); setTimeout(() => s.remove(), 1400);
   }
 }
-const stat = () => {
-  let ok = 0, max = 0;
-  IDS.forEach((id) => C.stories[id].slides.forEach((sl) => { const r = P.quiz[id + ":" + sl.id]; if (r !== undefined) { ok += r; max += sl.quiz.length; } }));
-  return { medals: P.done.length, hearts: P.tasks.length, ok, max };
-};
+const stat = () => ({ medals: P.done.length, hearts: P.tasks.length });
 
 // ---------- мир ----------
 $("#defs").innerHTML = A.defs();
@@ -119,7 +116,7 @@ const SPOTS = {
   family: { cx: 305, cy: 606, rx: 104, ry: 92, chip: [305, 494] },
   land: { cx: 205, cy: 370, rx: 176, ry: 74, chip: [310, 322] },
 };
-$("#wcam").insertAdjacentHTML("beforeend", IDS.map((id) => {
+document.querySelector("#worldArt svg:last-of-type").insertAdjacentHTML("beforeend", IDS.map((id) => {
   const sp = SPOTS[id], st = C.stories[id];
   return `<g class="spot" data-id="${id}" tabindex="0" role="button" aria-label="Открыть: ${st.label}">
     <ellipse cx="${sp.cx}" cy="${sp.cy}" rx="${sp.rx}" ry="${sp.ry}" fill="rgba(255,255,255,.001)" pointer-events="all"/>
@@ -146,14 +143,16 @@ function spotCenter(id) {
 }
 function openStory(id, push = true) {
   story = id; slide = 0;
-  const [px, py] = spotCenter(id), sp = SPOTS[id];
+  const [px, py] = spotCenter(id);
   $("#stage").innerHTML = SCENES[id]();
   storyEl.style.setProperty("--cx", px + "px"); storyEl.style.setProperty("--cy", py + "px");
-  const w = $("#world");
-  w.style.setProperty("--zx", -2.6 * (sp.cx - 200) + "px"); w.style.setProperty("--zy", -2.6 * (sp.cy - 400) + "px");
+  const w = $("#world"), ap = $("#app");
+  w.style.setProperty("--ox", px + "px"); w.style.setProperty("--oy", py + "px");
+  w.style.setProperty("--zx", ap.clientWidth / 2 - px + "px"); w.style.setProperty("--zy", ap.clientHeight / 2 - py + "px");
   w.classList.remove("intro"); w.classList.add("zoom");
   renderSlide();
   requestAnimationFrame(() => storyEl.classList.add("open"));
+  setTimeout(() => { if (story) w.classList.add("off"); }, 1000); // мир под историей не рисуем: экономим силы телефона
   if (push) history.pushState({ s: id }, "", "#" + id);
   track(id);
 }
@@ -162,7 +161,7 @@ function closeStory() {
   story = null;
   voice.pause();
   storyEl.classList.remove("open"); storyEl.classList.add("closing");
-  $("#world").classList.remove("zoom");
+  $("#world").classList.remove("off"); $("#world").classList.remove("zoom");
   refreshWorld();
   track("world");
   setTimeout(() => {
@@ -172,10 +171,13 @@ function closeStory() {
 }
 function setHead(t, p) { $("#ct").textContent = t; if (p !== undefined) words($("#cp"), p); }
 
+function camPx(cx, cy, s) {
+  const W = $("#app").clientWidth, H = $("#app").clientHeight, k = Math.max(W / 400, H / 800), ox = (W - 400 * k) / 2;
+  return `translate(${k * 200 + ox - s * (k * cx + ox)}px, ${k * 290 - s * k * cy}px) scale(${s})`;
+}
 function renderSlide() {
   const st = C.stories[story], sl = st.slides[slide], n = st.slides.length;
-  const cam = $("#stage .cam"), [cx, cy, s] = sl.cam;
-  cam.style.transform = `translate(${200 - cx * s}px, ${290 - cy * s}px) scale(${s})`;
+  $("#stage .layers").style.transform = camPx(...sl.cam);
   document.querySelectorAll("#stage [data-show]").forEach((el) => {
     const on = el.dataset.show.split(",").includes(sl.id);
     el.classList.remove("on");
@@ -192,7 +194,6 @@ function renderSlide() {
   $("#next").disabled = false;
   if (sl.type === "tasks") runTasks(st, sl);
   else if (sl.type === "reasons") runReasons();
-  else if (sl.type === "quiz") runQuiz(st, sl);
   playVoice(`${story}-${slide + 1}`);
 }
 
@@ -220,38 +221,6 @@ function runReasons() {
     setHead("Я люблю свою семью…", txt);
     const r = b.getBoundingClientRect(); burst(r.left + r.width / 2, r.top);
     b.textContent = i >= C.reasons.length ? "💖 Ещё раз" : "💖 Ещё";
-  };
-}
-// --- викторина
-function runQuiz(st, sl) {
-  const key = story + ":" + sl.id, n = sl.quiz.length;
-  const box = $("#extra");
-  if (P.quiz[key] !== undefined) { words($("#cp"), `Ты уже прошёл эту викторину! Правильных ответов с первого раза: ${P.quiz[key]} из ${n}.`); return; }
-  $("#next").disabled = true;
-  let qi = 0, first = 0, tried = false;
-  const show = () => {
-    const q = sl.quiz[qi]; tried = false;
-    $("#ct").textContent = `${sl.t.split("«")[0].trim() || "Викторина"} · ${qi + 1} из ${n}`;
-    words($("#cp"), q.q);
-    box.innerHTML = q.a.map((a, i) => `<button class="opt" data-i="${i}">${a}</button>`).join("");
-  };
-  show();
-  box.onclick = (e) => {
-    const b = e.target.closest(".opt"); if (!b || b.disabled) return;
-    const q = sl.quiz[qi];
-    if (+b.dataset.i === q.ok) {
-      b.classList.add("good"); if (!tried) first++;
-      box.querySelectorAll(".opt").forEach((x) => (x.disabled = true));
-      const r = b.getBoundingClientRect(); burst(r.left + r.width / 2, r.top, "⭐");
-      setTimeout(() => {
-        if (++qi < n) show();
-        else {
-          P.quiz[key] = first; save(); box.innerHTML = "";
-          setHead("Молодец!", `Правильно с первого раза: ${first} из ${n} 🎉`);
-          $("#next").disabled = false; confetti(60);
-        }
-      }, 900);
-    } else { b.classList.add("bad"); b.disabled = true; tried = true; }
   };
 }
 // --- нажатие на интерактивные предметы на сцене (дерево, портфель, карта…)
@@ -287,8 +256,8 @@ storyEl.addEventListener("touchend", (e) => {
   if (Math.abs(dx) > 55 && !e.target.closest(".mk, .opt, .task")) go(dx < 0 ? 1 : -1);
 });
 const openSpot = (el) => { if (el && !story) openStory(el.dataset.id); };
-$("#worldSvg").addEventListener("click", (e) => openSpot(e.target.closest(".spot")));
-$("#worldSvg").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSpot(e.target.closest(".spot")); } });
+$("#worldArt").addEventListener("click", (e) => openSpot(e.target.closest(".spot")));
+$("#worldArt").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSpot(e.target.closest(".spot")); } });
 
 // ---------- медаль, финал, книга воспоминаний ----------
 function finishStory() {
@@ -310,7 +279,7 @@ function showFinale() {
   $("#fTitle").textContent = C.finale;
   const s = stat();
   $("#fBook").innerHTML = `<b>📖 Книга воспоминаний</b>
-    <span>🏅 Медалей: ${s.medals} из 3</span><span>❤️ Добрых дел: ${s.hearts}</span><span>🧩 Викторины: ${s.ok} из ${s.max}</span>`;
+    <span>🏅 Медалей: ${s.medals} из 3</span><span>❤️ Добрых дел: ${s.hearts}</span>`;
   $("#fMedals").innerHTML = IDS.map((id, i) => `<div class="fm fm${i}">${A.medal(C.stories[id].medal)}</div>`).join("");
   $("#finale").classList.remove("hide");
   requestAnimationFrame(() => setTimeout(() => $("#fMedals").classList.add("join"), 400));
@@ -340,6 +309,7 @@ $("#enter").textContent = "▶ " + C.startButton;
 $("#start").insertAdjacentHTML("afterbegin", `<svg class="sbg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
   <rect width="400" height="800" fill="url(#sky)"/>${A.sun(330, 120, 30)}${A.cloud(80, 160, 1, 38)}${A.cloud(250, 260, 0.8, 46, -9)}${A.mountains(300)}
   <path d="M-50 770 Q100 720 220 760 T450 740 V900 H-50Z" fill="url(#grass)" stroke="${INK}" stroke-width="2.5"/></svg>`);
+$("#card").insertAdjacentHTML("afterbegin", `<svg class="guide" viewBox="-36 -80 72 86" aria-hidden="true">${A.kid({ kind: "girl", cls: "hop" })}</svg>`);
 refreshWorld();
 const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 $("#enter").addEventListener("click", () => {
@@ -347,7 +317,7 @@ $("#enter").addEventListener("click", () => {
   voice.src = SILENT; voice.play().catch(() => {});
   $("#start").classList.add("hide");
   track("world");
-  IDS.forEach((k) => getUrl(k)); // готовим остальную музыку заранее
+  if (!volOK) IDS.forEach((k, i) => setTimeout(() => getUrl(k), 5000 + i * 6000)); // iPhone: готовим песни по одной
   setTimeout(() => playVoice("hello"), 300);
   const h = location.hash.slice(1);
   if (IDS.includes(h)) { history.replaceState(null, "", location.pathname); setTimeout(() => openStory(h), 400); }
