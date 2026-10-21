@@ -3,14 +3,14 @@ const C = CONTENT;
 const IDS = ["school", "family", "land"];
 const SCENES = { school: A.sceneSchool, family: A.sceneFamily, land: A.sceneLand };
 
-// ---------- состояние ----------
-let visited = new Set();
-try { visited = new Set(JSON.parse(localStorage.getItem("sevil-visited") || "[]")); } catch (e) {}
-const saveVisited = () => { try { localStorage.setItem("sevil-visited", JSON.stringify([...visited])); } catch (e) {} };
+// ---------- состояние (хранится в телефоне) ----------
+let P = { done: [], tasks: [], quiz: {} };
+try { P = Object.assign(P, JSON.parse(localStorage.getItem("sevil-v2") || "{}")); } catch (e) {}
+const save = () => { try { localStorage.setItem("sevil-v2", JSON.stringify(P)); } catch (e) {} };
 let story = null, slide = 0, finaleShown = false;
 
 // ---------- звук ----------
-// Мелодия рендерится в WAV и играет через <audio>: работает и на iPhone в беззвучном режиме.
+// Мелодия мира рендерится в WAV, песни приглушаются и «запекаются» в WAV: работает и на iPhone в беззвучном режиме.
 async function renderLoop(c) {
   const sr = 22050, step = 60 / c.bpm / 2, n = c.melody.length, loop = n * step, tail = step * 3;
   const ctx = new OfflineAudioContext(1, Math.ceil(sr * (loop + tail)), sr);
@@ -33,30 +33,25 @@ async function renderLoop(c) {
   const d = buf.getChannelData(0), L = Math.round(sr * loop), out = new Float32Array(L);
   out.set(d.subarray(0, L));
   for (let i = L; i < d.length; i++) out[i - L] += d[i];
-  const w = new DataView(new ArrayBuffer(44 + L * 2));
-  const str = (o, t) => [...t].forEach((ch, k) => w.setUint8(o + k, ch.charCodeAt(0)));
-  str(0, "RIFF"); w.setUint32(4, 36 + L * 2, true); str(8, "WAVEfmt ");
-  w.setUint32(16, 16, true); w.setUint16(20, 1, true); w.setUint16(22, 1, true);
-  w.setUint32(24, sr, true); w.setUint32(28, sr * 2, true); w.setUint16(32, 2, true); w.setUint16(34, 16, true);
-  str(36, "data"); w.setUint32(40, L * 2, true);
-  for (let i = 0; i < L; i++) w.setInt16(44 + i * 2, Math.max(-1, Math.min(1, out[i])) * 32767, true);
-  return URL.createObjectURL(new Blob([w], { type: "audio/wav" }));
+  return wavUrl([out], sr, 1);
 }
-const BG = 0.28; // громкость песен как фона
-async function bakedSong(path) {
-  const raw = await (await fetch(path)).arrayBuffer();
-  const ac = await new OfflineAudioContext(2, 1, 44100).decodeAudioData(raw);
-  const ch = ac.numberOfChannels, L = ac.length, sr = ac.sampleRate;
+function wavUrl(chs, sr, gain) {
+  const ch = chs.length, L = chs[0].length;
   const w = new DataView(new ArrayBuffer(44 + L * ch * 2));
   const str = (o, t) => [...t].forEach((c, k) => w.setUint8(o + k, c.charCodeAt(0)));
   str(0, "RIFF"); w.setUint32(4, 36 + L * ch * 2, true); str(8, "WAVEfmt ");
   w.setUint32(16, 16, true); w.setUint16(20, 1, true); w.setUint16(22, ch, true);
   w.setUint32(24, sr, true); w.setUint32(28, sr * ch * 2, true); w.setUint16(32, ch * 2, true); w.setUint16(34, 16, true);
   str(36, "data"); w.setUint32(40, L * ch * 2, true);
-  const data = Array.from({ length: ch }, (_, c) => ac.getChannelData(c));
   let o = 44;
-  for (let i = 0; i < L; i++) for (let c = 0; c < ch; c++, o += 2) w.setInt16(o, Math.max(-1, Math.min(1, data[c][i] * BG)) * 32767, true);
+  for (let i = 0; i < L; i++) for (let c = 0; c < ch; c++, o += 2) w.setInt16(o, Math.max(-1, Math.min(1, chs[c][i] * gain)) * 32767, true);
   return URL.createObjectURL(new Blob([w], { type: "audio/wav" }));
+}
+const BG = 0.28; // громкость песен как фона
+async function bakedSong(path) {
+  const raw = await (await fetch(path)).arrayBuffer();
+  const ac = await new OfflineAudioContext(2, 1, 44100).decodeAudioData(raw);
+  return wavUrl(Array.from({ length: ac.numberOfChannels }, (_, c) => ac.getChannelData(c)), ac.sampleRate, BG);
 }
 const audio = new Audio();
 audio.loop = true; audio.setAttribute("playsinline", "");
@@ -79,13 +74,14 @@ async function track(key) {
   try { audio.src = await getUrl(key); await audio.play(); } catch (e) { console.warn(e); }
   if (curTrack === key) fade(1, 500);
 }
+// Голос Севиль: файлы voice/<история>-<номер слайда>.mp3 и voice/hello.mp3. Если файла нет, молчим.
 const voice = new Audio();
 voice.setAttribute("playsinline", "");
-function playVoice() {
+function playVoice(name) {
   voice.pause();
-  if (!story) return;
-  voice.src = `voice/${story}-${slide + 1}.mp3?v=${C.voiceVersion || 1}`;
-  voice.play().catch(() => {}); // файла ещё нет или звук запрещён: молчим
+  if (!name) return;
+  voice.src = `voice/${name}.mp3?v=${C.voiceVersion || 1}`;
+  voice.play().catch(() => {});
 }
 $("#mute").addEventListener("click", () => {
   audio.muted = !audio.muted; voice.muted = audio.muted;
@@ -93,13 +89,29 @@ $("#mute").addEventListener("click", () => {
   $("#mute").setAttribute("aria-label", audio.muted ? "Включить звук" : "Выключить звук");
 });
 
+// ---------- помощники ----------
+const words = (el, text) => { el.innerHTML = text.split(" ").map((w, i) => `<span class="w" style="animation-delay:${0.2 + i * 0.06}s">${w}</span>`).join(" "); };
+function burst(x, y, emoji = "❤️") {
+  const app = $("#app").getBoundingClientRect();
+  for (let i = 0; i < 5; i++) {
+    const s = document.createElement("span");
+    s.className = "burst"; s.textContent = emoji;
+    s.style.left = x - app.left + (Math.random() - 0.5) * 50 + "px"; s.style.top = y - app.top + "px";
+    s.style.animationDelay = i * 0.07 + "s";
+    $("#app").appendChild(s); setTimeout(() => s.remove(), 1400);
+  }
+}
+const stat = () => {
+  let ok = 0, max = 0;
+  IDS.forEach((id) => C.stories[id].slides.forEach((sl) => { const r = P.quiz[id + ":" + sl.id]; if (r !== undefined) { ok += r; max += sl.quiz.length; } }));
+  return { medals: P.done.length, hearts: P.tasks.length, ok, max };
+};
+
 // ---------- мир ----------
 $("#defs").innerHTML = A.defs();
 $("#worldArt").innerHTML = A.world();
 $("#wTitle").textContent = C.worldTitle;
 $("#wSub").textContent = `${C.name}, ${C.grade}`;
-$("#sTitle").textContent = C.worldTitle;
-$("#sSub").textContent = `Салам! Меня зовут ${C.name}. Добро пожаловать в мой мир!`;
 $("#hint").innerHTML = `<span>👆</span><span>${C.hint}</span>`;
 
 const SPOTS = {
@@ -120,10 +132,10 @@ $("#wcam").insertAdjacentHTML("beforeend", IDS.map((id) => {
 }).join(""));
 
 function refreshWorld() {
-  $("#stars").innerHTML = IDS.map((id) => `<span class="${visited.has(id) ? "on" : "off"}">⭐</span>`).join("");
-  $("#stars").setAttribute("aria-label", `Открыто ${visited.size} из 3`);
-  document.querySelectorAll(".spot").forEach((s) => s.classList.toggle("visited", visited.has(s.dataset.id)));
-  $("#hint").classList.toggle("gone", visited.size > 0);
+  $("#stars").innerHTML = IDS.map((id) => `<span class="${P.done.includes(id) ? "on" : "off"}">🏅</span>`).join("");
+  $("#stars").setAttribute("aria-label", `Медалей: ${P.done.length} из 3`);
+  document.querySelectorAll(".spot").forEach((s) => s.classList.toggle("visited", P.done.includes(s.dataset.id)));
+  $("#hint").classList.toggle("gone", P.done.length > 0);
 }
 
 // ---------- истории ----------
@@ -140,54 +152,130 @@ function openStory(id, push = true) {
   const w = $("#world");
   w.style.setProperty("--zx", -2.6 * (sp.cx - 200) + "px"); w.style.setProperty("--zy", -2.6 * (sp.cy - 400) + "px");
   w.classList.remove("intro"); w.classList.add("zoom");
-  renderSlide(false);
+  renderSlide();
   requestAnimationFrame(() => storyEl.classList.add("open"));
   if (push) history.pushState({ s: id }, "", "#" + id);
   track(id);
 }
 function closeStory() {
   if (!story) return;
-  const id = story; story = null;
+  story = null;
   voice.pause();
-  visited.add(id); saveVisited();
   storyEl.classList.remove("open"); storyEl.classList.add("closing");
   $("#world").classList.remove("zoom");
   refreshWorld();
   track("world");
   setTimeout(() => {
     storyEl.classList.remove("closing"); $("#stage").innerHTML = "";
-    if (visited.size === 3 && !finaleShown) showFinale();
+    if (P.done.length === 3 && !finaleShown) showFinale();
   }, 800);
 }
-function renderSlide(animate = true) {
+function setHead(t, p) { $("#ct").textContent = t; if (p !== undefined) words($("#cp"), p); }
+
+function renderSlide() {
   const st = C.stories[story], sl = st.slides[slide], n = st.slides.length;
   const cam = $("#stage .cam"), [cx, cy, s] = sl.cam;
   cam.style.transform = `translate(${200 - cx * s}px, ${290 - cy * s}px) scale(${s})`;
   document.querySelectorAll("#stage [data-show]").forEach((el) => {
-    const on = el.dataset.show.split(",").includes(String(slide + 1));
+    const on = el.dataset.show.split(",").includes(sl.id);
     el.classList.remove("on");
     if (on) requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("on")));
   });
-  $("#ic").textContent = st.icon; $("#ct").textContent = sl.t;
-  $("#cp").innerHTML = sl.p.split(" ").map((w, i) => `<span class="w" style="animation-delay:${0.25 + i * 0.07}s">${w}</span>`).join(" ");
+  $("#ic").textContent = st.icon;
+  $("#extra").innerHTML = ""; $("#card").dataset.type = sl.type || "story";
+  setHead(sl.t, sl.p || "");
   $("#dots").innerHTML = st.slides.map((_, i) => `<i class="${i < slide ? "done" : i === slide ? "cur" : ""}"></i>`).join("");
   $("#prev").disabled = slide === 0;
   const last = slide === n - 1;
-  $("#next").textContent = last ? "В мой мир 🌍" : "Дальше ▶";
+  $("#next").textContent = last ? "Готово 🎉" : "Дальше ▶";
   $("#next").classList.toggle("last", last);
-  playVoice();
+  $("#next").disabled = false;
+  if (sl.type === "tasks") runTasks(st, sl);
+  else if (sl.type === "reasons") runReasons();
+  else if (sl.type === "quiz") runQuiz(st, sl);
+  playVoice(`${story}-${slide + 1}`);
 }
+
+// --- задания «Сердце доброты»
+function runTasks(st, sl) {
+  const key = (i) => `${story}:${i}`;
+  const draw = () => {
+    $("#extra").innerHTML = sl.tasks.map((t, i) => `<button class="task ${P.tasks.includes(key(i)) ? "done" : ""}" data-i="${i}"><span class="chk">${P.tasks.includes(key(i)) ? "❤️" : "🤍"}</span>${t}</button>`).join("");
+  };
+  draw();
+  $("#extra").onclick = (e) => {
+    const b = e.target.closest(".task"); if (!b) return;
+    const k = key(+b.dataset.i);
+    if (!P.tasks.includes(k)) { P.tasks.push(k); save(); const r = b.getBoundingClientRect(); burst(r.left + 30, r.top); }
+    draw();
+  };
+}
+// --- «За что я люблю семью?»
+function runReasons() {
+  let i = 0;
+  $("#extra").innerHTML = `<button class="opt big" id="rs">💖 Показать</button>`;
+  $("#extra").onclick = (e) => {
+    const b = e.target.closest("#rs"); if (!b) return;
+    const txt = C.reasons[i % C.reasons.length]; i++;
+    setHead("Я люблю свою семью…", txt);
+    const r = b.getBoundingClientRect(); burst(r.left + r.width / 2, r.top);
+    b.textContent = i >= C.reasons.length ? "💖 Ещё раз" : "💖 Ещё";
+  };
+}
+// --- викторина
+function runQuiz(st, sl) {
+  const key = story + ":" + sl.id, n = sl.quiz.length;
+  const box = $("#extra");
+  if (P.quiz[key] !== undefined) { words($("#cp"), `Ты уже прошёл эту викторину! Правильных ответов с первого раза: ${P.quiz[key]} из ${n}.`); return; }
+  $("#next").disabled = true;
+  let qi = 0, first = 0, tried = false;
+  const show = () => {
+    const q = sl.quiz[qi]; tried = false;
+    $("#ct").textContent = `${sl.t.split("«")[0].trim() || "Викторина"} · ${qi + 1} из ${n}`;
+    words($("#cp"), q.q);
+    box.innerHTML = q.a.map((a, i) => `<button class="opt" data-i="${i}">${a}</button>`).join("");
+  };
+  show();
+  box.onclick = (e) => {
+    const b = e.target.closest(".opt"); if (!b || b.disabled) return;
+    const q = sl.quiz[qi];
+    if (+b.dataset.i === q.ok) {
+      b.classList.add("good"); if (!tried) first++;
+      box.querySelectorAll(".opt").forEach((x) => (x.disabled = true));
+      const r = b.getBoundingClientRect(); burst(r.left + r.width / 2, r.top, "⭐");
+      setTimeout(() => {
+        if (++qi < n) show();
+        else {
+          P.quiz[key] = first; save(); box.innerHTML = "";
+          setHead("Молодец!", `Правильно с первого раза: ${first} из ${n} 🎉`);
+          $("#next").disabled = false; confetti(60);
+        }
+      }, 900);
+    } else { b.classList.add("bad"); b.disabled = true; tried = true; }
+  };
+}
+// --- нажатие на интерактивные предметы на сцене (дерево, портфель, карта…)
+function onMk(el) {
+  if (!el) return;
+  el.classList.add("seen");
+  setHead(el.dataset.t, el.dataset.p);
+  const r = el.getBoundingClientRect(); burst(r.left + r.width / 2, r.top, "✨");
+}
+$("#stage").addEventListener("click", (e) => onMk(e.target.closest(".mk")));
+$("#stage").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onMk(e.target.closest(".mk")); } });
+
+// ---------- навигация ----------
 const go = (d) => {
   if (!story) return;
   const n = C.stories[story].slides.length;
-  if (d > 0 && slide === n - 1) return back();
+  if (d > 0 && slide === n - 1) return finishStory();
   slide = Math.max(0, Math.min(n - 1, slide + d)); renderSlide();
 };
 function back() { history.state && history.state.s ? history.back() : closeStory(); }
 $("#next").addEventListener("click", () => go(1));
 $("#prev").addEventListener("click", () => go(-1));
 $("#back").addEventListener("click", back);
-window.addEventListener("popstate", () => { if (story) closeStory(); });
+window.addEventListener("popstate", () => { if (story && !$("#medal").classList.contains("show")) closeStory(); });
 document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") go(1); else if (e.key === "ArrowLeft") go(-1); else if (e.key === "Escape") back();
 });
@@ -196,50 +284,71 @@ storyEl.addEventListener("touchstart", (e) => { tx = e.touches[0].clientX; }, { 
 storyEl.addEventListener("touchend", (e) => {
   if (tx === null) return;
   const dx = e.changedTouches[0].clientX - tx; tx = null;
-  if (Math.abs(dx) > 55) go(dx < 0 ? 1 : -1);
+  if (Math.abs(dx) > 55 && !e.target.closest(".mk, .opt, .task")) go(dx < 0 ? 1 : -1);
 });
-
 const openSpot = (el) => { if (el && !story) openStory(el.dataset.id); };
 $("#worldSvg").addEventListener("click", (e) => openSpot(e.target.closest(".spot")));
 $("#worldSvg").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSpot(e.target.closest(".spot")); } });
 
-// ---------- финал и конфетти ----------
+// ---------- медаль, финал, книга воспоминаний ----------
+function finishStory() {
+  const id = story, m = C.stories[id].medal;
+  voice.pause();
+  $("#mArt").innerHTML = A.medal(m);
+  $("#mName").textContent = `Медаль «${m.name}»`;
+  $("#mText").textContent = m.text;
+  $("#medal").classList.add("show");
+  confetti(120);
+  $("#mOk").onclick = () => {
+    $("#medal").classList.remove("show");
+    if (!P.done.includes(id)) { P.done.push(id); save(); }
+    closeStory();
+  };
+}
 function showFinale() {
   finaleShown = true;
   $("#fTitle").textContent = C.finale;
-  $("#fSub").textContent = `Это мой мир: школа, семья и Родина. С любовью, ${C.name}!`;
+  const s = stat();
+  $("#fBook").innerHTML = `<b>📖 Книга воспоминаний</b>
+    <span>🏅 Медалей: ${s.medals} из 3</span><span>❤️ Добрых дел: ${s.hearts}</span><span>🧩 Викторины: ${s.ok} из ${s.max}</span>`;
+  $("#fMedals").innerHTML = IDS.map((id, i) => `<div class="fm fm${i}">${A.medal(C.stories[id].medal)}</div>`).join("");
   $("#finale").classList.remove("hide");
-  confetti();
+  requestAnimationFrame(() => setTimeout(() => $("#fMedals").classList.add("join"), 400));
+  confetti(150);
 }
-$("#again").addEventListener("click", () => { $("#finale").classList.add("hide"); });
-function confetti() {
+$("#again").addEventListener("click", () => { $("#finale").classList.add("hide"); $("#fMedals").classList.remove("join"); });
+function confetti(count = 120) {
   const cv = $("#confetti"), g = cv.getContext("2d");
   cv.width = cv.clientWidth * devicePixelRatio; cv.height = cv.clientHeight * devicePixelRatio;
   const colors = ["#ff5d3b", "#ffd23f", "#26a69a", "#2b93e6", "#ff8fd0", "#8be67b"];
-  const ps = Array.from({ length: 120 }, () => ({
+  const ps = Array.from({ length: count }, () => ({
     x: Math.random() * cv.width, y: -Math.random() * cv.height * 0.6, w: (6 + Math.random() * 8) * devicePixelRatio,
     v: (2 + Math.random() * 4) * devicePixelRatio, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3, c: colors[(Math.random() * colors.length) | 0], dx: (Math.random() - 0.5) * 2,
   }));
   const t0 = performance.now();
   (function loop(t) {
     g.clearRect(0, 0, cv.width, cv.height);
-    for (const p of ps) {
-      p.y += p.v; p.x += p.dx; p.r += p.vr;
-      g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2); g.restore();
-    }
-    if (t - t0 < 6000) requestAnimationFrame(loop); else g.clearRect(0, 0, cv.width, cv.height);
+    for (const p of ps) { p.y += p.v; p.x += p.dx; p.r += p.vr; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2); g.restore(); }
+    if (t - t0 < 5000) requestAnimationFrame(loop); else g.clearRect(0, 0, cv.width, cv.height);
   })(t0);
 }
 
 // ---------- старт ----------
+$("#sTitle").innerHTML = C.worldTitle.split("").map((ch, i) => (ch === " " ? " " : `<span class="lt" style="animation-delay:${0.15 + i * 0.05}s">${ch}</span>`)).join("");
+$("#sSub").textContent = C.hello;
+$("#enter").textContent = "▶ " + C.startButton;
+$("#start").insertAdjacentHTML("afterbegin", `<svg class="sbg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <rect width="400" height="800" fill="url(#sky)"/>${A.sun(330, 120, 30)}${A.cloud(80, 160, 1, 38)}${A.cloud(250, 260, 0.8, 46, -9)}${A.mountains(300)}
+  <path d="M-50 770 Q100 720 220 760 T450 740 V900 H-50Z" fill="url(#grass)" stroke="${INK}" stroke-width="2.5"/></svg>`);
 refreshWorld();
 const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 $("#enter").addEventListener("click", () => {
   audio.src = SILENT; audio.play().catch(() => {});
-  voice.src = SILENT; voice.play().catch(() => {}); // «разблокируем» звук в момент нажатия
+  voice.src = SILENT; voice.play().catch(() => {});
   $("#start").classList.add("hide");
   track("world");
   IDS.forEach((k) => getUrl(k)); // готовим остальную музыку заранее
+  setTimeout(() => playVoice("hello"), 300);
   const h = location.hash.slice(1);
   if (IDS.includes(h)) { history.replaceState(null, "", location.pathname); setTimeout(() => openStory(h), 400); }
 });

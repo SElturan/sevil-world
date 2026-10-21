@@ -77,16 +77,17 @@ A.kid = (o) => {
     mom: { top: "#c2408a", legs: "#f7c9a0", hair: "#2b1b12", dress: true },
     dad: { top: "#2f6f5a", legs: "#33405e", hair: "#2b1b12", dress: false },
     teen: { top: "#f59f00", legs: "#2f4a8a", hair: "#4a2c16", dress: false },
+    teacher: { top: "#2f9e8f", legs: "#f7c9a0", hair: "#2b1b12", dress: true },
     pupilB: { top: "#ff7a1a", legs: "#2b2f3a", hair: "#2b1b12", dress: false },
     pupilG: { top: "#ff7a1a", legs: "#f7c9a0", hair: "#2b1b12", dress: true },
   }[kind];
-  const big = kind === "mom" || kind === "dad";
+  const big = kind === "mom" || kind === "dad" || kind === "teacher";
   let hair = "", hat = "";
   if (kind === "girl" || kind === "pupilG") {
     // Севиль: короткое каштановое каре
     hair = `<path d="M-15 -10 Q-17 -34 0 -34 Q17 -34 15 -10 L15 0 Q11 -2 9 -12 Q0 -19 -9 -12 Q-11 -2 -15 0Z" fill="#6b4630" ${S(1.8)}/>`;
     if (kind === "girl") hat = `<path d="M-14 -21 Q-13 -39 0 -39 Q13 -39 14 -21Z" fill="#ffe066" ${S(2)}/><path d="M-14 -21 Q4 -17 20 -21 Q12 -26 0 -24Z" fill="#f5c933" ${S(1.8)}/><path d="M-3 -33 l-5 -3 l1 6Z M-3 -33 l5 -3 l-1 6Z" fill="#fff3a0" ${S(1.2)}/>`;
-  } else if (kind === "mom") {
+  } else if (kind === "mom" || kind === "teacher") {
     hair = `<path d="M-14 -14 Q-14 -32 0 -32 Q14 -32 14 -14 Q8 -24 0 -24 Q-8 -24 -14 -14Z" fill="${cfg.hair}" ${S(1.8)}/>
       <path d="M-14 -14 Q-20 -2 -15 8" fill="none" stroke="${cfg.hair}" stroke-width="6" stroke-linecap="round"/><path d="M14 -14 Q20 -2 15 8" fill="none" stroke="${cfg.hair}" stroke-width="6" stroke-linecap="round"/>
       <circle cx="-15" cy="8" r="3.6" fill="#ffd23f"/><circle cx="15" cy="8" r="3.6" fill="#ffd23f"/>`;
@@ -260,18 +261,18 @@ A.sceneSchool = () => `
   ${A.ground()}
   ${A.tree(38, 500, 1.15)}${A.tree(372, 492, 1.0)}
   ${A.school(200, 500, 1.28)}
-  <g data-show="2" style="transform:translate(120px,520px)"><g class="busIn">${A.bus(0, 0, 0.95, true)}</g></g>
-  <g data-show="3">
+  <g data-show="bus" style="transform:translate(120px,520px)"><g class="busIn">${A.bus(0, 0, 0.95, true)}</g></g>
+  <g data-show="lessons">
     <g class="float" style="animation-delay:0s"><text x="70" y="250" font-size="34" font-weight="900" fill="#e8433f" font-family="Nunito, system-ui">А</text></g>
     <g class="float" style="animation-delay:.6s"><text x="320" y="230" font-size="34" font-weight="900" fill="#2b93e6" font-family="Nunito, system-ui">2+3</text></g>
     <g class="float" style="animation-delay:1.1s"><text x="40" y="330" font-size="28" font-weight="900" fill="#26a69a" font-family="Nunito, system-ui">ABC</text></g>
     <g class="float" style="animation-delay:1.6s"><text x="330" y="320" font-size="30" font-weight="900" fill="#f59f00" font-family="Nunito, system-ui">π</text></g>
     <g class="float" style="animation-delay:.3s" transform="translate(300,360)"><rect x="-22" y="-16" width="44" height="30" rx="4" fill="#dfe6f2" ${S(2)}/><rect x="-18" y="-12" width="36" height="22" rx="2" fill="#2b4a7a"/><path d="M-10 -4 l6 4 l-6 4 M0 6 h10" stroke="#7dffa1" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-28 16 H28 L24 22 H-24Z" fill="#c4cbd9" ${S(1.6)}/></g>
   </g>
-  <g data-show="4">${A.kid({ x: 230, y: 530, s: 1.0, kind: "pupilB", cls: "hop" })}${A.kid({ x: 285, y: 534, s: 1.0, kind: "pupilG", cls: "hop", delay: .25 })}${A.kid({ x: 340, y: 530, s: 0.95, kind: "pupilB", cls: "hop", delay: .5 })}
+  <g data-show="friends">${A.kid({ x: 230, y: 530, s: 1.0, kind: "pupilB", cls: "hop" })}${A.kid({ x: 285, y: 534, s: 1.0, kind: "pupilG", cls: "hop", delay: .25 })}${A.kid({ x: 340, y: 530, s: 0.95, kind: "pupilB", cls: "hop", delay: .5 })}
     <g transform="translate(262,486)"><circle r="10" fill="#ff5d73" ${S(2)}><animate attributeName="cy" values="0;-34;0" dur="1.2s" repeatCount="indefinite"/></circle></g></g>
   ${A.kid({ x: 150, y: 540, s: 1.05, kind: "pupilG", cls: "hop", delay: .1 })}
-  <g data-show="5">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 280, 1.4)}${A.heart(340, 380, 1.8)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>
+  <g data-show="end,kind">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 280, 1.4)}${A.heart(340, 380, 1.8)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>
   ${A.flower(30, 560, "#ff5d73")}${A.flower(100, 580, "#ffd23f", .4)}${A.flower(370, 566, "#ff8fd0", .8)}
 </g></svg>`;
 
@@ -283,12 +284,12 @@ A.sceneFamily = () => `
   ${A.ground()}
   ${A.tree(36, 505, 1.1)}${A.tree(378, 498, 0.95)}
   ${A.yurt(200, 478, 1.55)}
-  <g data-show="3" class="pop">${A.table(200, 540, 1.1)}</g>
-  <g data-show="1,2,3,4,5" class="pop">${A.kid({ x: 82, y: 520, s: 1.05, kind: "dad", cls: "hop" })}</g>
-  <g data-show="1,2,3,4,5" class="pop" style="animation-delay:.3s">${A.kid({ x: 318, y: 520, s: 1.05, kind: "mom", cls: "hop", delay: .2 })}</g>
-  <g data-show="1,2,3,4,5" class="pop" style="animation-delay:.6s">${A.kid({ x: 200, y: 530, s: 1.15, kind: "girl", cls: "hop", delay: .4 })}</g>
-  <g data-show="2,5">${A.heart(110, 380, 0)}${A.heart(290, 380, .6)}${A.heart(200, 350, 1.2)}${A.heart(60, 430, 1.8, "#ff8fa3", .8)}${A.heart(340, 430, 2.2, "#ff8fa3", .8)}</g>
-  <g data-show="4">${A.sparkle(165, 195, 0, 1.3)}${A.sparkle(235, 190, .5, 1.1)}${A.sparkle(200, 170, 1, 1.4)}${A.sparkle(130, 230, 1.4, 1)}${A.sparkle(272, 228, .9, 1)}</g>
+  <g data-show="traditions" class="pop">${A.table(200, 540, 1.1)}</g>
+  <g data-show="intro,learn,traditions,kind,why,quiz,end" class="pop">${A.kid({ x: 82, y: 520, s: 1.05, kind: "dad", cls: "hop" })}</g>
+  <g data-show="intro,learn,traditions,kind,why,quiz,end" class="pop" style="animation-delay:.3s">${A.kid({ x: 318, y: 520, s: 1.05, kind: "mom", cls: "hop", delay: .2 })}</g>
+  <g data-show="intro,learn,traditions,kind,why,quiz,end" class="pop" style="animation-delay:.6s">${A.kid({ x: 200, y: 530, s: 1.15, kind: "girl", cls: "hop", delay: .4 })}</g>
+  <g data-show="learn,end,why,kind">${A.heart(110, 380, 0)}${A.heart(290, 380, .6)}${A.heart(200, 350, 1.2)}${A.heart(60, 430, 1.8, "#ff8fa3", .8)}${A.heart(340, 430, 2.2, "#ff8fa3", .8)}</g>
+  <g data-show="end,quiz">${A.sparkle(165, 195, 0, 1.3)}${A.sparkle(235, 190, .5, 1.1)}${A.sparkle(200, 170, 1, 1.4)}${A.sparkle(130, 230, 1.4, 1)}${A.sparkle(272, 228, .9, 1)}</g>
   ${A.flower(30, 575, "#ff5d73")}${A.flower(112, 590, "#ffd23f", .4)}${A.flower(290, 588, "#ff8fd0", .8)}${A.flower(372, 570, "#fff", 1.1)}
 </g></svg>`;
 
@@ -298,15 +299,15 @@ A.sceneLand = () => `
   ${A.land()}
   ${A.mountains(0)}
   ${A.eagle(300, 230, 0.8)}
-  <g data-show="2">${A.eagle(120, 200, 0.6)}</g>
+  <g data-show="mountains">${A.eagle(120, 200, 0.6)}</g>
   <path d="M-50 470 Q80 440 200 468 T450 456 V900 H-50Z" fill="url(#grass2)" ${S(2.5)}/>
   ${A.lake(200, 472, 190, 20)}
-  <g data-show="3"><g transform="translate(275,470)"><g class="boat"><path d="M-22 0 H22 L16 10 H-16Z" fill="#e8433f" ${S(2)}/><path d="M0 0 V-30 L18 -6Z" fill="#fff" ${S(2)}/></g></g>${A.sparkle(215, 462, 0, 1.2)}${A.sparkle(330, 478, .6, 1)}${A.sparkle(235, 484, 1.1, 1)}</g>
+  <g data-show="lake"><g transform="translate(275,470)"><g class="boat"><path d="M-22 0 H22 L16 10 H-16Z" fill="#e8433f" ${S(2)}/><path d="M0 0 V-30 L18 -6Z" fill="#fff" ${S(2)}/></g></g>${A.sparkle(215, 462, 0, 1.2)}${A.sparkle(330, 478, .6, 1)}${A.sparkle(235, 484, 1.1, 1)}</g>
   <path d="M-50 520 Q100 490 230 520 T450 505 V900 H-50Z" fill="url(#grass)" ${S(2.5)}/>
   ${A.yurt(318, 556, 0.5)}${A.yurt(262, 572, 0.38)}
   ${A.flag(70, 560, 1.15)}
   ${A.tree(372, 540, 0.8)}
-  <g data-show="5">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 400, 1.4)}${A.heart(340, 400, 1.8)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>
+  <g data-show="end,quiz">${A.heart(110, 330, 0)}${A.heart(300, 310, .5)}${A.heart(200, 270, 1)}${A.heart(60, 400, 1.4)}${A.heart(340, 400, 1.8)}${A.sparkle(150, 240, .2, 1.2)}${A.sparkle(260, 250, .7, 1)}</g>
   ${A.kid({ x: 200, y: 560, s: 1.0, kind: "girl", cls: "hop" })}
   ${A.flower(30, 585, "#ff5d73")}${A.flower(130, 598, "#ffd23f", .4)}${A.flower(270, 600, "#ff8fd0", .8)}${A.flower(366, 586, "#fff", 1.1)}
 </g></svg>`;

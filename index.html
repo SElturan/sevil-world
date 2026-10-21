@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 <svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
@@ -17,17 +17,18 @@
   <section id="world" class="view intro" aria-label="Мой большой мир">
     <div id="worldArt"></div>
     <div class="title"><h1 id="wTitle"></h1><p id="wSub"></p></div>
-    <div class="stars" id="stars" aria-label="Открытые места"></div>
+    <div class="stars" id="stars" aria-label="Медали"></div>
     <div class="hint" id="hint"></div>
   </section>
 
   <section id="story" class="view" aria-live="polite">
     <div id="stage"></div>
     <div class="topbar"><button class="back" id="back" aria-label="Назад в мой мир">←</button><div class="dots" id="dots"></div></div>
-    <div class="card" id="card">
+    <div class="card" id="card" data-type="story">
       <img class="av" src="img/sevil-face.jpg" alt="">
       <h2><span class="ic" id="ic"></span><span id="ct"></span></h2>
       <p id="cp"></p>
+      <div id="extra"></div>
       <div class="nav"><button class="btn prev" id="prev" aria-label="Назад">◀</button><button class="btn next" id="next">Дальше ▶</button></div>
     </div>
   </section>
@@ -35,24 +36,36 @@
   <button id="mute" aria-label="Выключить звук">🔊</button>
   <canvas id="confetti"></canvas>
 
+  <div class="overlay modal" id="medal" role="dialog" aria-label="Награда">
+    <div class="shine"></div>
+    <div id="mArt" class="mart"></div>
+    <h1 id="mName"></h1>
+    <p id="mText"></p>
+    <button class="go" id="mOk">Продолжить ▶</button>
+  </div>
+
   <div class="overlay hide" id="finale" role="dialog" aria-label="Финал">
-    <img class="face" src="img/sevil-face.jpg" alt="Севиль">
-    <h1 id="fTitle"></h1>
-    <p id="fSub"></p>
-    <button class="go" id="again">Ещё раз ↺</button>
+    <div class="fwrap">
+      <img class="face" src="img/sevil-face.jpg" alt="Севиль">
+      <div id="fMedals" class="fmedals"></div>
+      <h1 id="fTitle"></h1>
+      <div id="fBook" class="book"></div>
+      <button class="go" id="again">Ещё раз ↺</button>
+    </div>
   </div>
 
   <div class="overlay" id="start">
     <h1 id="sTitle"></h1>
     <img class="portrait" src="img/sevil.jpg" alt="Севиль">
     <p id="sSub"></p>
-    <button class="go" id="enter">▶ Войти в мой мир</button>
+    <button class="go" id="enter">▶ Начать путешествие</button>
     <small>🔊 Включи звук на телефоне</small>
   </div>
 </main>
 
-<script src="content.js?v=14"></script>
-<script src="art.js?v=14"></script>
-<script src="app.js?v=14"></script>
+<script src="content.js?v=20"></script>
+<script src="art.js?v=20"></script>
+<script src="art2.js?v=20"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>
