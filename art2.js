@@ -11,7 +11,7 @@ A.panel = (id, bg, inner) => `<g data-show="${id}">
 
 // ---------- семейное дерево ----------
 A.treePanel = () => {
-  const P = CONTENT.family;
+  const P = CONTENT.people;
   const branches = P.map((p) => `<path d="M200 440 Q${(200 + p.pos[0]) / 2} ${(440 + p.pos[1]) / 2 + 20} ${p.pos[0]} ${p.pos[1]}" fill="none" stroke="#8d5a2b" stroke-width="8" stroke-linecap="round"/>`).join("");
   const nodes = P.map((p, i) => {
     const face = p.photo
@@ -29,7 +29,7 @@ A.treePanel = () => {
 
 // ---------- школьный портфель ----------
 A.bagPanel = () => {
-  const B = CONTENT.stories.school.bag;
+  const B = CONTENT.bag;
   const book = `<rect x="-27" y="-33" width="54" height="66" rx="5" fill="#3a86ff" ${S(2.4)}/><rect x="-27" y="-33" width="9" height="66" fill="#2563c9"/><rect x="-10" y="-20" width="30" height="20" rx="3" fill="#fff"/><path d="M-5 -12 h20 M-5 -6 h14" stroke="#3a86ff" stroke-width="2.4" stroke-linecap="round"/>`;
   const globe = `<circle r="31" fill="#4cc9f0" ${S(2.4)}/><path d="M-18 -14 Q-6 -24 4 -14 Q8 -4 -4 0 Q-14 4 -18 -6Z M8 6 Q22 2 24 14 Q16 24 8 16Z" fill="#6fd16a"/><path d="M-24 40 Q0 28 24 40" fill="none" ${S(3)}/><path d="M0 31 V38" ${S(3)}/>`;
   const note = `<rect x="-27" y="-33" width="54" height="66" rx="5" fill="#ffe066" ${S(2.4)}/><g fill="${INK}"><circle cx="-27" cy="-22" r="3"/><circle cx="-27" cy="-8" r="3"/><circle cx="-27" cy="6" r="3"/><circle cx="-27" cy="20" r="3"/></g><path d="M-14 -18 H20 M-14 -6 H20 M-14 6 H20 M-14 18 H10" stroke="#c9a227" stroke-width="2.4" stroke-linecap="round"/>`;
@@ -48,7 +48,7 @@ A.bagPanel = () => {
 
 // ---------- комуз и кыл кыяк ----------
 A.musicPanel = () => {
-  const I = CONTENT.stories.land.instruments;
+  const I = CONTENT.instruments;
   const komuz = `<g transform="translate(0,-18)"><rect x="-6" y="-96" width="12" height="100" rx="5" fill="#7a4a2a" ${S(2.4)}/>
     <rect x="-10" y="-112" width="20" height="22" rx="8" fill="#a8641f" ${S(2.4)}/><circle cx="-12" cy="-102" r="3" fill="#ffd23f"/><circle cx="12" cy="-102" r="3" fill="#ffd23f"/>
     <path d="M0 80 C-40 80 -44 24 -18 2 L18 2 C44 24 40 80 0 80Z" fill="#c07b3d" ${S(2.8)}/><circle cx="0" cy="44" r="11" fill="#5b3a29"/>
@@ -64,7 +64,7 @@ A.musicPanel = () => {
 
 // ---------- карта (схема) ----------
 A.mapPanel = () => {
-  const R = CONTENT.stories.land.regions;
+  const R = CONTENT.regions;
   const outline = "M60 190 L110 160 L170 150 L205 138 L252 150 L312 140 L352 168 L372 204 L342 238 L300 252 L262 272 L232 302 L200 312 L172 332 L132 354 L96 368 L60 352 L40 322 L70 302 L96 286 L80 260 L50 236Z";
   const dots = R.map((r, i) => mk(r.pos[0], r.pos[1], r.t, r.p,
     `<circle r="15" fill="#fff" stroke="#e8112d" stroke-width="3.5"/><text y="5" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="15" fill="#e8112d">${i + 1}</text>${lab(30, r.t.replace(" область", ""))}`)).join("");
@@ -94,8 +94,3 @@ A.medal = (m) => {
   <text x="80" y="134" text-anchor="middle" font-size="46">${m.icon}</text></svg>`;
 };
 
-// ---------- подключаем панели к сценам ----------
-const inject = (fn, extra) => () => fn().replace(/<\/svg><\/div>\s*$/, extra() + "</svg></div>");
-A.sceneSchool = inject(A.sceneSchool, () => A.teacherGroup() + A.bagPanel());
-A.sceneFamily = inject(A.sceneFamily, () => A.treePanel());
-A.sceneLand = inject(A.sceneLand, () => A.musicPanel() + A.mapPanel());

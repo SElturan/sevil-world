@@ -77,27 +77,31 @@ A.kid = (o) => {
     mom: { top: "#c2408a", legs: "#f7c9a0", hair: "#2b1b12", dress: true },
     dad: { top: "#2f6f5a", legs: "#33405e", hair: "#2b1b12", dress: false },
     teen: { top: "#f59f00", legs: "#2f4a8a", hair: "#4a2c16", dress: false },
+    sister: { top: "#f06595", legs: "#f7c9a0", hair: "#2b1b12", dress: true },
+    granny: { top: "#9b5de5", legs: "#f7c9a0", hair: "#cfcfd6", dress: true },
+    grandpa: { top: "#4b5d8a", legs: "#33405e", hair: "#cfcfd6", dress: false },
     teacher: { top: "#2f9e8f", legs: "#f7c9a0", hair: "#2b1b12", dress: true },
     pupilB: { top: "#ff7a1a", legs: "#2b2f3a", hair: "#2b1b12", dress: false },
     pupilG: { top: "#ff7a1a", legs: "#f7c9a0", hair: "#2b1b12", dress: true },
   }[kind];
-  const big = kind === "mom" || kind === "dad" || kind === "teacher";
+  const big = ["mom", "dad", "teacher", "granny", "grandpa"].includes(kind);
   let hair = "", hat = "";
   if (kind === "girl" || kind === "pupilG") {
     // Севиль: короткое каштановое каре
     hair = `<path d="M-15 -10 Q-17 -34 0 -34 Q17 -34 15 -10 L15 0 Q11 -2 9 -12 Q0 -19 -9 -12 Q-11 -2 -15 0Z" fill="#6b4630" ${S(1.8)}/>`;
     if (kind === "girl") hat = `<path d="M-14 -21 Q-13 -39 0 -39 Q13 -39 14 -21Z" fill="#ffe066" ${S(2)}/><path d="M-14 -21 Q4 -17 20 -21 Q12 -26 0 -24Z" fill="#f5c933" ${S(1.8)}/><path d="M-3 -33 l-5 -3 l1 6Z M-3 -33 l5 -3 l-1 6Z" fill="#fff3a0" ${S(1.2)}/>`;
-  } else if (kind === "mom" || kind === "teacher") {
+  } else if (kind === "mom" || kind === "teacher" || kind === "granny" || kind === "sister") {
     hair = `<path d="M-14 -14 Q-14 -32 0 -32 Q14 -32 14 -14 Q8 -24 0 -24 Q-8 -24 -14 -14Z" fill="${cfg.hair}" ${S(1.8)}/>
       <path d="M-14 -14 Q-20 -2 -15 8" fill="none" stroke="${cfg.hair}" stroke-width="6" stroke-linecap="round"/><path d="M14 -14 Q20 -2 15 8" fill="none" stroke="${cfg.hair}" stroke-width="6" stroke-linecap="round"/>
       <circle cx="-15" cy="8" r="3.6" fill="#ffd23f"/><circle cx="15" cy="8" r="3.6" fill="#ffd23f"/>`;
   } else {
     hair = `<path d="M-14 -14 Q-15 -32 0 -32 Q15 -32 14 -14 Q6 -22 -2 -20 Q-9 -20 -14 -14Z" fill="${cfg.hair}" ${S(1.8)}/>`;
   }
-  if (kind === "dad" || kind === "boy") {
+  if (kind === "dad" || kind === "boy" || kind === "grandpa") {
     hat = `<path d="M-13 -22 Q-11 -44 0 -46 Q11 -44 13 -22 Z" fill="#fff" ${S(2)}/><rect x="-14" y="-25" width="28" height="6" rx="3" fill="#1d1d1d" ${S(1.4)}/>`;
     hair = "";
   }
+  if (kind === "granny") hat = `<path d="M-15 -20 Q0 -40 15 -20 Q0 -26 -15 -20Z" fill="#fff" ${S(1.6)}/>`;
   if (kind === "mom") hat = `<path d="M-14 -22 Q0 -38 14 -22 Q0 -28 -14 -22Z" fill="#ffd23f" ${S(1.6)}/>`;
   // Севиль в белой футболке «Баластан» и юбке-русалке
   const teeSkirt = `<path d="M-10 2 Q0 -1 10 2 L12 15 L-12 15Z" fill="#fff" ${S(2)}/><circle cx="0" cy="9" r="3" fill="#ff7a1a"/>
