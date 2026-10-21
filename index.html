@@ -3,73 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14524f">
-<title>Мой большой мир — Севиль</title>
+<meta name="theme-color" content="#0b0518">
+<title>Мой мир — клип Севиль</title>
+<meta property="og:title" content="Мой мир — клип Севиль">
+<meta property="og:description" content="Песня и мультклип Севиль, 3 класс, школа «Баластан»">
+<meta property="og:image" content="video/poster.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Nunito:wght@700;800&display=swap&subset=cyrillic" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=63">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+  :root { --safe-b: env(safe-area-inset-bottom, 0px); }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #0b0518; overflow: hidden; font-family: Montserrat, system-ui, sans-serif; color: #fff; }
+  body { display: flex; align-items: center; justify-content: center; }
+  .player { position: relative; height: 100dvh; width: min(100vw, calc(100dvh * .5625)); background: #000; overflow: hidden; }
+  video { display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  .cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 24px calc(var(--safe-b) + 44px); background: linear-gradient(to top, rgba(8, 3, 20, .78), rgba(8, 3, 20, 0) 55%); transition: opacity .5s, visibility .5s; }
+  .cover.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  h1 { font-weight: 900; font-size: clamp(34px, 11vw, 52px); line-height: 1; text-align: center; text-shadow: 0 4px 0 #d62839, 0 12px 30px rgba(0, 0, 0, .5); }
+  p { font-weight: 800; font-size: 16px; text-align: center; text-shadow: 0 2px 10px rgba(0, 0, 0, .7); }
+  .play { margin-top: 6px; min-height: 64px; padding: 0 36px; border: 0; border-radius: 99px; font: 900 22px Montserrat, sans-serif; color: #5a2d00; background: #ffd23f; box-shadow: 0 8px 0 #c79a00, 0 18px 40px rgba(255, 190, 60, .45); cursor: pointer; animation: pulse 1.8s ease-in-out infinite; }
+  .play:active { transform: translateY(6px); box-shadow: 0 2px 0 #c79a00; }
+  @keyframes pulse { 50% { transform: scale(1.05); } }
+  small { font-weight: 700; font-size: 13px; opacity: .85; }
+  .end { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(8, 3, 20, .72); }
+  .end.show { display: flex; }
+  .end a, .end button { min-height: 52px; padding: 0 28px; border-radius: 99px; border: 0; font: 900 18px Montserrat, sans-serif; text-decoration: none; display: inline-flex; align-items: center; cursor: pointer; }
+  .end button { color: #5a2d00; background: #ffd23f; }
+  .end a { color: #fff; background: rgba(255, 255, 255, .18); }
+</style>
 </head>
 <body>
-<svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
-
-<div id="stage">
-  <!-- Главная: один экран, как диорама (школа · семья · Родина) -->
-  <section id="hub" aria-label="Мой большой мир">
-    <div id="hubLayers"></div>
-    <div id="spots"></div>
-    <div class="hubHint" id="hubHint">Нажми на древо, школу или Родину</div>
-  </section>
-
-  <!-- Рассказ -->
-  <section id="story" aria-label="Рассказ">
-    <div id="scenes"></div>
-    <canvas id="fx" aria-hidden="true"></canvas>
-    <div class="vig"></div>
-    <div class="topui" id="topui">
-      <div id="segs" aria-hidden="true"></div>
-    </div>
-    <div class="caption" id="cap" aria-live="polite">
-      <img class="mini" src="img/sevil-face.jpg" alt="Севиль" width="64" height="64">
-      <div class="ctext"><span class="area" id="area"></span><h2 id="line"></h2></div>
-    </div>
-    <div class="zones" id="zones" aria-hidden="true"></div>
-    <div class="hint" id="hint">Нажми справа — дальше · Удерживай — пауза</div>
-  </section>
-
-  <button class="iconbtn" id="home" aria-label="В книгу">📖</button>
-  <button class="iconbtn" id="mute" aria-label="Выключить звук">🔊</button>
-
-  <!-- Финал -->
-  <section class="finale" id="finale">
-    <div class="introLayers" id="finaleLayers"></div>
-    <div class="rays big"></div>
-    <div class="fBody">
-      <div class="meds" id="meds"></div>
-      <h2 id="fText"></h2>
-      <p class="credit" id="fCredit"></p>
-      <button class="tapbtn small" id="again">Вернуться в книгу ↺</button>
-    </div>
-  </section>
-
-  <!-- Заставка -->
-  <section class="intro" id="intro">
-    <div class="introLayers" id="introLayers"></div>
-    <div class="rays big"></div>
-    <div class="introBody">
-      <img class="arch" src="img/sevil.jpg" alt="Севиль" width="150" height="240">
-      <h1 id="iTitle"></h1>
-      <p id="iHello"></p>
-      <button class="tapbtn" id="enter"></button>
-    </div>
-  </section>
-</div>
-
-<script src="content.js?v=63"></script>
-<script src="art.js?v=63"></script>
-<script src="art2.js?v=63"></script>
-<script src="chars.js?v=63"></script>
-<script src="paper.js?v=63"></script>
-<script src="app.js?v=63"></script>
+<main class="player">
+  <video id="v" playsinline preload="metadata" poster="video/poster.jpg">
+    <source src="video/sevil-clip.mp4" type="video/mp4">
+  </video>
+  <div class="cover" id="cover">
+    <h1>МОЙ МИР</h1>
+    <p>Севиль · 3 класс · школа «Баластан»</p>
+    <button class="play" id="play">▶ Смотреть клип</button>
+    <small>🔊 Включи звук на телефоне</small>
+  </div>
+  <div class="end" id="end">
+    <button id="again">↺ Смотреть ещё раз</button>
+    <a href="world.html">Открыть интерактивный мир</a>
+  </div>
+</main>
+<script>
+  const v = document.getElementById("v"), cover = document.getElementById("cover"), end = document.getElementById("end");
+  document.getElementById("play").addEventListener("click", () => { cover.classList.add("hide"); v.controls = false; v.play().catch(() => { v.controls = true; }); });
+  v.addEventListener("ended", () => end.classList.add("show"));
+  document.getElementById("again").addEventListener("click", () => { end.classList.remove("show"); v.currentTime = 0; v.play(); });
+  v.addEventListener("click", () => { if (!v.paused) v.pause(); else v.play(); });
+</script>
 </body>
 </html>
