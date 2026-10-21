@@ -106,3 +106,90 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .credit { font-size: 15px; font-weight: 800; opacity: .9; }
 
 @media (prefers-reduced-motion: reduce) { .rays, .glow, .sweep, .lay.clouds, .bob { animation: none !important; } .par { transition: none; } }
+
+/* ===================== Книга: главная страница, обложка, рассказы ===================== */
+#hub, #story { position: absolute; inset: 0; }
+#story { visibility: hidden; opacity: 0; transition: opacity .7s, visibility 0s .7s; }
+#stage.story #story { visibility: visible; opacity: 1; transition: opacity .7s; }
+#hub { background: #f0d3a4; transition: transform .9s cubic-bezier(.5, 0, .3, 1), opacity .7s, visibility 0s 0s; }
+#stage.story #hub { opacity: 0; transform: scale(1.2); visibility: hidden; transition: transform .9s cubic-bezier(.5, 0, .3, 1), opacity .7s, visibility 0s .9s; }
+#stage.story .topui, #story .topui, #story .caption { opacity: 1; }
+#stage:not(.story) #home { display: none; }
+.iconbtn { position: absolute; top: calc(var(--safe-t) + 6px); z-index: 45; }
+#home { left: 10px; font-size: 20px; }
+#mute { right: 10px; }
+.topui { padding: calc(var(--safe-t) + 22px) 58px 0; }
+
+/* слои главной страницы */
+.hl { position: absolute; inset: 0; }
+.hl .par { transition: transform .35s ease-out; }
+.hl.wall .lay { }
+.lay svg { filter: none; }
+.hl.tree .lay, .hl.boxes .lay, .hl.fx .lay { filter: drop-shadow(0 6px 5px rgba(60, 30, 5, .35)); }
+.hl.tree .lay { transform-origin: 50% 78%; }
+#hub.rise .hl.wall { animation: fadeIn .9s ease both; }
+#hub.rise .hl.tree .lay { animation: popTree 1.3s cubic-bezier(.3, 1.45, .5, 1) .35s both, treeSway 6s ease-in-out 1.7s infinite alternate; }
+#hub.rise .hl.boxes .lay { animation: popBox 1.1s cubic-bezier(.3, 1.35, .5, 1) 1s both; }
+#hub.rise .hl.fx .lay { animation: fadeIn .8s ease 1.9s both; }
+@keyframes fadeIn { from { opacity: 0; } }
+@keyframes popTree { from { transform: scale(.15); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes popBox { from { transform: translate3d(0, 55%, 0); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes treeSway { from { transform: rotate(-1deg); } to { transform: rotate(1deg); } }
+.lay.sway { transform-origin: 50% 82%; animation: treeSway 6s ease-in-out infinite alternate; }
+#hub:not(.rise) .hl:not(.wall) { opacity: 0; }
+
+/* нажимаемые места */
+.spot { position: absolute; z-index: 20; border: 0; background: transparent; border-radius: 30px; }
+.spot::after { content: ""; position: absolute; inset: -4px; border: 3px dashed rgba(255, 255, 255, .95); border-radius: inherit; box-shadow: 0 0 0 2px rgba(74, 47, 34, .25); animation: ringPulse 2s ease-in-out infinite; }
+@keyframes ringPulse { 50% { transform: scale(1.03); opacity: .55; } }
+.lbl { position: absolute; left: 50%; padding: 9px 18px; border-radius: 99px; background: #fff; color: #4a2f22; font-family: var(--head); font-weight: 900; font-size: 17px; white-space: nowrap; box-shadow: 0 8px 18px rgba(60, 30, 5, .4); transform: translate(-50%, -50%); animation: lblBob 2.4s ease-in-out infinite; }
+@keyframes lblBob { 50% { transform: translate(-50%, calc(-50% - 6px)); } }
+.spot.done .lbl::after { content: " ✓"; color: #2fb344; }
+.medalrow { position: absolute; z-index: 30; top: calc(var(--safe-t) + 10px); left: 0; right: 0; display: flex; justify-content: center; gap: 8px; pointer-events: none; }
+.mdot { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .85); border: 2px solid #b7791f; font-size: 18px; filter: grayscale(1) opacity(.5); transition: filter .5s, transform .5s; }
+.mdot.on { filter: none; transform: scale(1.12); box-shadow: 0 0 16px rgba(255, 210, 63, .9); }
+.hubHint { position: absolute; z-index: 30; left: 50%; bottom: calc(var(--safe-b) + 14px); transform: translateX(-50%); padding: 9px 18px; border-radius: 99px; background: rgba(74, 47, 34, .86); font-size: 14px; font-weight: 800; white-space: nowrap; opacity: 0; transition: opacity .6s 2.6s; pointer-events: none; }
+#hub.rise .hubHint { opacity: 1; }
+
+/* обложка: книга раскрывается */
+.book { position: absolute; inset: 0; z-index: 60; perspective: 1900px; background: transparent; }
+.book.open { pointer-events: none; }
+.book.gone { visibility: hidden; }
+.cover { position: absolute; inset: 0; transform-origin: 0 50%; transform-style: preserve-3d; transition: transform 1.8s cubic-bezier(.55, .05, .2, 1); }
+.book.open .cover { transform: rotateY(-178deg); }
+.face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.face.back { transform: rotateY(180deg); background: linear-gradient(90deg, #d8bd8a, #fdf1da 14%); }
+.face.front { background: #14524f; box-shadow: inset 0 0 60px rgba(0, 0, 0, .45); }
+#coverArt { position: absolute; inset: 0; }
+#coverArt svg { display: block; width: 100%; height: 100%; }
+.front .rays { display: none; }
+.front .tapbtn { position: absolute; left: 0; right: 0; bottom: calc(var(--safe-b) + 30px); margin: auto; width: max-content; }
+
+/* движущиеся мелочи рисунков */
+.glide { animation: glide 6s ease-in-out infinite; }
+@keyframes glide { 50% { transform: translate(10px, -8px); } }
+.flagS { transform-box: fill-box; transform-origin: 0 50%; animation: flagw 1.6s ease-in-out infinite; }
+.boat { animation: boat 4s ease-in-out infinite; }
+@keyframes boat { 50% { transform: translateY(-3px) rotate(3deg); } }
+.smoke circle { fill: #fff; opacity: 0; transform-box: fill-box; transform-origin: center; animation: smoke 4.2s linear infinite; }
+@keyframes smoke { 0% { opacity: .85; transform: translate(0, 0) scale(.5); } 100% { opacity: 0; transform: translate(24px, -80px) scale(2.2); } }
+.twinkle { transform-box: fill-box; transform-origin: center; animation: twinkle 1.8s ease-in-out infinite; }
+@keyframes twinkle { 50% { transform: scale(.4) rotate(45deg); opacity: .4; } }
+.heartUp { transform-box: fill-box; transform-origin: center; animation: heartUp 3.2s ease-in infinite; }
+@keyframes heartUp { 0% { opacity: 0; transform: translateY(0) scale(.5); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-80px) scale(1.3); } }
+.photo.pano { aspect-ratio: 1000 / 800; height: 100%; width: auto; max-width: none; }
+.photo.pano .lay { position: absolute; inset: 0; }
+
+/* награда */
+.modal { position: absolute; inset: 0; z-index: 70; display: grid; place-items: center; padding: 24px; background: rgba(14, 8, 30, .72); opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
+.modal.show { opacity: 1; visibility: visible; }
+.modalCard { width: 100%; max-width: 330px; padding: 26px 20px 22px; text-align: center; border-radius: 28px; background: #fff7e6; color: #4a2f22; box-shadow: 0 30px 70px rgba(0, 0, 0, .5); transform: scale(.88); transition: transform .45s cubic-bezier(.3, 1.5, .5, 1); }
+.modal.show .modalCard { transform: none; }
+.mart svg { width: 150px; height: auto; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .35)); animation: swing 3s ease-in-out infinite; transform-origin: 50% 0; }
+@keyframes swing { 50% { transform: rotate(5deg); } }
+.modalCard h2 { margin-top: 8px; font-family: var(--head); font-weight: 900; font-size: 24px; line-height: 1.15; }
+.modalCard p { margin: 6px 0 16px; font-size: 16px; font-weight: 800; color: #8a5a2c; }
+#fx { z-index: 12; }
+.lbl { font-size: 15px; padding: 7px 14px; }
+#hub.rise .hubHint { opacity: 0; animation: hintLife 5s 2.4s both; }
+@keyframes hintLife { 12%, 80% { opacity: 1; } 100% { opacity: 0; } }

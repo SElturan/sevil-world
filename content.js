@@ -5,7 +5,7 @@ const CONTENT = {
   school: "Баластан",
   title: "Мой большой мир",
   hello: "Салам! Меня зовут Севиль. Сегодня я расскажу вам о самом дорогом в моей жизни.",
-  tap: "Коснись, чтобы начать",
+  tap: "Открыть книгу",
   finaleText: "Мой мир начинается с Родины, согревается любовью семьи и становится больше благодаря знаниям!",
   voiceVersion: 1, // увеличьте число, когда замените голосовые файлы
   // песни играют тихим фоном; в начале и в финале играет встроенная мелодия
@@ -20,16 +20,21 @@ const CONTENT = {
     { role: "Брат", name: "" }, { role: "Сестра", name: "" },
     { role: "Папа", name: "" }, { role: "Мама", name: "" },
   ],
-  // Сцены по порядку. Если рядом лежит голос voice/<id>.mp3, он зазвучит сам.
-  // img — картинка из папки img/ (если файла нет, рисуется встроенная сцена).
+  // Разделы книги: картинка на главной странице, медаль и рассказ из сцен.
+  sections: {
+    family: { title: "Семья", icon: "❤️", medal: { name: "Доброе сердце", icon: "💖", c1: "#ff8fa3", c2: "#ff4d6d" } },
+    school: { title: "Школа", icon: "📚", medal: { name: "Юный исследователь", icon: "🔭", c1: "#4cc9f0", c2: "#3a86ff" } },
+    land:   { title: "Родина", icon: "🇰🇬", medal: { name: "Патриот", icon: "🇰🇬", c1: "#ff6b6b", c2: "#e8112d" } },
+  },
+  // Сцены рассказов. Если рядом лежит голос voice/<id>.mp3, он зазвучит сам.
   scenes: [
-    { id: "land1", area: "🇰🇬 Родина", text: "Моя Родина — Кыргызстан", img: "img/land.jpg", from: [0, 1.0], to: [-14, 1.18], origin: "20% 40%", music: "land", fx: "dust", dur: 7 },
-    { id: "land2", area: "🇰🇬 Родина", text: "Высокие горы и чистые озёра", img: "img/land.jpg", from: [-28, 1.08], to: [-64, 1.14], origin: "60% 50%", music: "land", fx: "dust", dur: 7 },
-    { id: "land3", area: "🇰🇬 Родина", text: "Юрта — дом кыргызов", img: "img/yurt.jpg", from: [-4, 1.05], to: [-62, 1.05], origin: "50% 50%", music: "land", fx: "dust", dur: 7 },
-    { id: "land4", area: "🇰🇬 Родина", text: "Красный флаг с солнцем и тундуком", img: "img/land.jpg", from: [-2, 1.5], to: [-6, 1.9], origin: "20% 35%", music: "land", fx: "sparks", dur: 6 },
-    { id: "family1", area: "❤️ Семья", text: "Моя семья — моё счастье", scene: "family", music: "family", fx: "hearts", dur: 7 },
-    { id: "family2", area: "❤️ Семья", text: "Папа, мама, бабушка, дедушка, брат и сестра", scene: "family", names: true, music: "family", fx: "hearts", dur: 8 },
-    { id: "school1", area: "📚 Школа", text: "Моя школа «Баластан»", scene: "school", music: "school", fx: "dust", dur: 7 },
-    { id: "school2", area: "📚 Школа", text: "Здесь я учусь, дружу и узнаю новое", scene: "school", bus: true, letters: true, music: "school", fx: "sparks", dur: 8 },
+    { id: "land1", sec: "land", area: "🇰🇬 Родина", text: "Моя Родина — Кыргызстан", pano: true, from: [0, 1.0], to: [-12, 1.12], origin: "15% 70%", music: "land", fx: "dust", dur: 7 },
+    { id: "land2", sec: "land", area: "🇰🇬 Родина", text: "Высокие горы и чистые озёра", pano: true, from: [-26, 1.05], to: [-54, 1.12], origin: "50% 60%", music: "land", fx: "dust", dur: 7 },
+    { id: "land3", sec: "land", area: "🇰🇬 Родина", text: "Юрта — дом кыргызов", pano: true, from: [-48, 1.15], to: [-62, 1.4], origin: "78% 80%", music: "land", fx: "dust", dur: 7 },
+    { id: "land4", sec: "land", area: "🇰🇬 Родина", text: "Красный флаг с солнцем и тундуком", pano: true, from: [-2, 1.5], to: [-6, 1.9], origin: "17% 72%", music: "land", fx: "sparks", dur: 6 },
+    { id: "family1", sec: "family", area: "❤️ Семья", text: "Моя семья — моё счастье", scene: "familyTree", music: "family", fx: "hearts", dur: 7 },
+    { id: "family2", sec: "family", area: "❤️ Семья", text: "Папа, мама, бабушка, дедушка, брат и сестра", scene: "family", names: true, music: "family", fx: "hearts", dur: 8 },
+    { id: "school1", sec: "school", area: "📚 Школа", text: "Моя школа «Баластан»", scene: "school", music: "school", fx: "dust", dur: 7 },
+    { id: "school2", sec: "school", area: "📚 Школа", text: "Здесь я учусь, дружу и узнаю новое", scene: "school", bus: true, letters: true, music: "school", fx: "sparks", dur: 8 },
   ],
 };
